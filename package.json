@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "lint": "eslint .",
+    "dev": "",
+    "lint": "eslint src/*",
     "lint:fix": "eslint --fix"
   },
   "dependencies": {
