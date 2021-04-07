@@ -10,6 +10,7 @@ const mongoOptions = {
   retryWrites: true,
   useUnifiedTopology: true,
   useNewUrlParser: true,
+  useCreateIndex: true,
 };
 
 // CONNECT TO DATABASE

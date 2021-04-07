@@ -14,9 +14,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-require('./config/config.database');
+require(`./config/config.database`);
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/api/companies', require('./routes/companies.routes'));
 
 module.exports = app;
