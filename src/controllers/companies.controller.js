@@ -2,8 +2,10 @@ const companyCtrl = {};
 const mongoose = require('mongoose');
 
 const { Company } = require('../models/entity.model');
+const { signUpVal } = require('../middlewares/validations/company');
+const validation = require('../middlewares/validations/validation');
 
-companyCtrl.signUp = async (req, res) => {
+async function signUp(req, res) {
   const reqCompany = req.body;
 
   const document = new Company(reqCompany);
@@ -22,6 +24,8 @@ companyCtrl.signUp = async (req, res) => {
           .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
       return res.status(500).json({ message: `internal server error  ${err}` });
     });
-};
+}
+
+companyCtrl.signUp = [validation(signUpVal), signUp];
 
 module.exports = companyCtrl;
