@@ -1,47 +1,47 @@
 const { model } = require('mongoose');
 
-const client = model('Client', require('./schemas/user.schema'), 'users');
-const admin = model('Admin', require('./schemas/admin.schema'), 'users');
-const company = model('Company', require('./schemas/company.schema'), 'users');
-const role = model('Role', require('./schemas/role.schema'), 'roles');
-const establishment = model(
+const Client = model('Client', require('./schemas/client.schema'), 'users');
+const Admin = model('Admin', require('./schemas/admin.schema'), 'users');
+const Company = model('Company', require('./schemas/company.schema'), 'users');
+const Role = model('Role', require('./schemas/role.schema'), 'roles');
+const Establishment = model(
   'Establishment',
   require('./schemas/establishment.schema'),
   'establishments',
 );
-const establishmentCategory = model(
+const EstablishmentCategory = model(
   'EstablishmentCategory',
   require('./schemas/establishmentCategory.schema'),
   'establishmentCategories',
 );
-const establishmentType = model(
+const EstablishmentType = model(
   'EstablishmentType',
   require('./schemas/establishmentType.schema'),
   'establishmentTypes',
 );
-const event = model('Event', require('./schemas/event.schema'), 'events');
-const eventCategory = model(
+const Event = model('Event', require('./schemas/event.schema'), 'events');
+const EventCategory = model(
   'EventCategory',
   require('./schemas/eventCategory.schema'),
   'eventCategories',
 );
-const dressCode = model('DressCode', require('./schemas/dressCode.schema'), 'dressCodes');
-const ticketStatus = model(
+const DressCode = model('DressCode', require('./schemas/dressCode.schema'), 'dressCodes');
+const TicketStatus = model(
   'TicketStatus',
   require('./schemas/ticketStatus.schema'),
   'eventTicketStatus',
 );
 
 module.exports = {
-  client,
-  admin,
-  company,
-  role,
-  establishment,
-  establishmentCategory,
-  establishmentType,
-  event,
-  eventCategory,
-  dressCode,
-  ticketStatus,
+  Client,
+  Admin,
+  Company,
+  Role,
+  Establishment,
+  EstablishmentCategory,
+  EstablishmentType,
+  Event,
+  EventCategory,
+  DressCode,
+  TicketStatus,
 };
