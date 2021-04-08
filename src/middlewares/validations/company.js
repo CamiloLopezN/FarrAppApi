@@ -18,6 +18,7 @@ companyValidation.signUpVal = Joi.object({
 });
 
 companyValidation.putCompany = Joi.object({
+  id: Joi.string().max(150),
   companyName: Joi.string().max(150),
   address: Joi.string().max(150),
   contactNumber: Joi.string().max(50),

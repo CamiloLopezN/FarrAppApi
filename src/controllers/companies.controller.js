@@ -49,9 +49,9 @@ Actualizar la información del perfil
  */
 async function updateProfile(req, res) {
   const { id } = req.query;
-  const update = req.body;
+  const { body } = req;
   const data = {
-    $set: update,
+    $set: body,
   };
   await Company.updateOne(
     {
