@@ -12,7 +12,7 @@ const establishmentSchema = new Schema({
   logoUrl: { type: String, required: true },
   photoUrls: { type: [String], required: true },
   capacity: { type: Number, required: true },
-  isActive: { type: Boolean, required: true },
+  isActive: { type: Boolean },
   location: { type: locationSchema, required: true },
   averageRating: { type: Number },
   company: {
