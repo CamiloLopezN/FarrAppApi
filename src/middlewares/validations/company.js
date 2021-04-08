@@ -1,8 +1,8 @@
 const Joi = require('joi');
 
-const signUpValidation = {};
+const companyValidation = {};
 
-signUpValidation.signUpVal = Joi.object({
+companyValidation.signUpVal = Joi.object({
   user: Joi.object({
     email: Joi.string()
       .email()
@@ -17,4 +17,11 @@ signUpValidation.signUpVal = Joi.object({
   nit: Joi.string().max(11).required(),
 });
 
-module.exports = signUpValidation;
+companyValidation.putCompany = Joi.object({
+  companyName: Joi.string().max(150),
+  address: Joi.string().max(150),
+  contactNumber: Joi.string().max(50),
+  nit: Joi.string().max(11),
+});
+
+module.exports = companyValidation;
