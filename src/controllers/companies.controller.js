@@ -1,7 +1,8 @@
 const companyCtrl = {};
 const mongoose = require('mongoose');
 
-const { Company } = require('../models/entity.model');
+const { Company, Establishment } = require('../models/entity.model');
+const { postEstablishmentVal } = require('../middlewares/validations/establishment');
 const { signUpVal, putCompany } = require('../middlewares/validations/company');
 const validation = require('../middlewares/validations/validation');
 
@@ -12,10 +13,13 @@ async function signUp(req, res) {
   const reqCompany = req.body;
 
   const document = new Company(reqCompany);
-  document.user.role = 'company';
-  document.user.password = await document.user.encryptPassword(document.user.password);
-  document.user.hasReqDeactivation = false;
-  document.user.isActive = false;
+  document.user = {
+    role: 'company',
+    password: await document.user.encryptPassword(document.user.password),
+    hasReqDeactivation: false,
+    isActive: false,
+  };
+
   await document
     .save()
     .then(() => {
@@ -72,5 +76,41 @@ async function updateProfile(req, res) {
 }
 
 companyCtrl.updateProfile = [validation(putCompany), updateProfile];
+
+async function postEstablishment(req, res) {
+  const { companyId } = req.query;
+  const establishment = new Establishment(req.body);
+  await Company.findOne({ _id: companyId }, { _id: 1, companyName: 1 })
+    .then((companySearch) => {
+      establishment.isActive = true;
+      establishment.averageRating = 0;
+      establishment.company = {
+        // eslint-disable-next-line no-underscore-dangle
+        companyId: companySearch._id,
+        companyName: companySearch.companyName,
+      };
+      establishment
+        .save()
+        .then(() => {
+          res.status(200).json({ message: 'establescimiento registrado' });
+        })
+        .catch((err) => {
+          if (err instanceof mongoose.Error.ValidationError)
+            return res
+              .status(400)
+              .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+          return res.status(500).json({ message: `internal server error  ${err}` });
+        });
+    })
+    .catch((err) => {
+      if (err instanceof mongoose.Error.ValidationError)
+        return res
+          .status(400)
+          .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+      return res.status(500).json({ message: `internal server error  ${err}` });
+    });
+}
+
+companyCtrl.postEstablishment = [validation(postEstablishmentVal), postEstablishment];
 
 module.exports = companyCtrl;
