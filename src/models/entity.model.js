@@ -1,9 +1,10 @@
-const { model } = require('mongoose');
+const { model } = require('../config/config.database');
 
-const Client = model('Client', require('./schemas/client.schema'), 'users');
-const Admin = model('Admin', require('./schemas/admin.schema'), 'users');
-const Company = model('Company', require('./schemas/company.schema'), 'users');
-const Role = model('Role', require('./schemas/role.schema'), 'roles');
+const Client = model('Client', require('./schemas/client.schema'));
+const Admin = model('Admin', require('./schemas/admin.schema'));
+const Company = model('Company', require('./schemas/company.schema'));
+const User = model('User', require('./schemas/user.schema'));
+const Role = model('Role', require('./schemas/role.schema'));
 const Establishment = model(
   'Establishment',
   require('./schemas/establishment.schema'),
@@ -36,6 +37,7 @@ module.exports = {
   Client,
   Admin,
   Company,
+  User,
   Role,
   Establishment,
   EstablishmentCategory,

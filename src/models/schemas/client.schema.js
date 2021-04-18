@@ -1,11 +1,10 @@
 const { Schema } = require('mongoose');
 
-const userSchema = require('./user.schema');
 const eventPreviewSchema = require('./eventPreview.schema');
 const establishmentPreviewSchema = require('./establishmentPreview.schema');
 
 const clientSchema = new Schema({
-  user: { type: userSchema, required: true },
+  userId: { type: Schema.Types.ObjectId, required: true, unique: true, ref: 'Users' },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   birthdate: { type: Date, required: true },

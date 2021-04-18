@@ -1,12 +1,11 @@
-const { Schema } = require('mongoose');
-
 const uniqueValidator = require('mongoose-unique-validator');
-const userSchema = require('./user.schema');
+const { Schema } = require('../../config/config.database');
+
 const eventPreviewSchema = require('./eventPreview.schema');
 const establishmentPreviewSchema = require('./establishmentPreview.schema');
 
 const companySchema = new Schema({
-  user: { type: userSchema, required: true },
+  userId: { type: Schema.Types.ObjectId, required: true, unique: true, ref: 'Users' },
   companyName: { type: String, unique: true, required: true },
   address: { type: String, required: true },
   contactNumber: { type: String, required: true },
