@@ -8,6 +8,7 @@ const userSchema = new Schema(
     role: { type: String, required: true },
     hasReqDeactivation: { type: Boolean },
     isActive: { type: Boolean },
+    isVerify: { type: Boolean },
   },
   { timestamps: true },
 );
