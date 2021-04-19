@@ -19,5 +19,6 @@ require(`./config/config.database`);
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api/companies', require('./routes/companies.routes'));
+app.use('/api/admins', require('./routes/admins.routes'));
 
 module.exports = app;
