@@ -5,5 +5,6 @@ const adminsController = require('../controllers/admins.controller');
 
 router.post('/', adminsController.postAdmin);
 router.get('/:adminId', adminsController.getAdminById);
+router.put('/:adminId', adminsController.updateProfileAdmin);
 
 module.exports = router;

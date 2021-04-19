@@ -12,4 +12,9 @@ adminValidation.postAdminVal = Joi.object({
   firstName: Joi.string().max(30).required(),
   lastName: Joi.string().max(30).required(),
 });
+
+adminValidation.updateAdmin = Joi.object({
+  firstName: Joi.string().max(30).required(),
+  lastName: Joi.string().max(30).required(),
+});
 module.exports = adminValidation;

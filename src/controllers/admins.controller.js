@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const validation = require('../middlewares/validations/validation');
-const { postAdminVal } = require('../middlewares/validations/admin.joi');
+const { postAdminVal, updateAdmin } = require('../middlewares/validations/admin.joi');
 const validatorPass = require('../middlewares/validations/password.validator');
 const { Admin, User } = require('../models/entity.model');
 const roles = require('../middlewares/oauth/roles');
@@ -64,3 +64,28 @@ const getAdminById = async (req, res) => {
   }
 };
 module.exports.getAdminById = [auth.authentication, auth.authorizationAdmin, getAdminById];
+
+const updateProfileAdmin = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    const data = {
+      $set: req.body,
+    };
+    const update = await Admin.updateOne({ _id: adminId }, data);
+    if (!update) return res.status(404).json({ message: 'Resource not found' });
+    return res.status(200).json({ message: req.body });
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
+    return res.status(500).json({ message: `internal server error  ${error}` });
+  }
+};
+
+module.exports.updateProfileAdmin = [
+  auth.authentication,
+  auth.authorizationAdmin,
+  validation(updateAdmin),
+  updateProfileAdmin,
+];
