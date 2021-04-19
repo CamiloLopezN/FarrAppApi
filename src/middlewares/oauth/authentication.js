@@ -37,14 +37,6 @@ oauth.authorizationCompany = async (req, res, next) => {
   return next();
 };
 
-oauth.authorizationAdminORCompany = async (req, res, next) => {
-  const { payload } = req;
-  console.log(payload.roles);
-  if (!payload.roles.includes('admin')) return res.status(403).json({ message: 'Forbidden' });
-
-  return next();
-};
-
 oauth.generateToken = (payload) => {
   return jwt.sign(payload, process.env.KEY_SECRET_TOKEN, {
     expiresIn: config.expiresSessionIn,
