@@ -157,7 +157,6 @@ async function registerEstablishment(req, res) {
       companyName: company.companyName,
     };
     const establishmentSaved = await establishment.save();
-    console.log(establishmentSaved);
     const reviewEstablishment = {
       establishmentName: establishmentSaved.establishmentName,
       city: establishmentSaved.location.city,
