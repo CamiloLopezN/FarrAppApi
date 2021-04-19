@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 
 const validation = require('../middlewares/validations/validation');
-const { postAdminVal } = require('../middlewares/validations/admin');
+const { postAdminVal } = require('../middlewares/validations/admin.joi');
 const validatorPass = require('../middlewares/validations/password.validator');
 const { Admin, User } = require('../models/entity.model');
+const roles = require('../middlewares/oauth/roles');
+const auth = require('../middlewares/oauth/authentication');
 
 // eslint-disable-next-line consistent-return
 const postAdmin = async (req, res) => {
@@ -19,10 +21,10 @@ const postAdmin = async (req, res) => {
       const newUser = new User({
         email,
         password,
-        role: 'Admin',
+        role: roles.adminRole,
         hasReqDeactivation: false,
-        isActive: false,
-        isVerified: false,
+        isActive: true,
+        isVerified: true,
       });
       newUser.password = await newUser.encryptPassword(password);
       const savedUser = await newUser.save();
@@ -40,13 +42,18 @@ const postAdmin = async (req, res) => {
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
 };
-module.exports.postAdmin = [validation(postAdminVal), postAdmin];
+module.exports.postAdmin = [
+  auth.authentication,
+  auth.authorizationAdmin,
+  validation(postAdminVal),
+  postAdmin,
+];
 
 const getAdminById = async (req, res) => {
   try {
-    const idAdmin = req.roleId;
-    const foundAdmin = await Admin.find({ _id: idAdmin }, { firstName: 1, lastName: 1, _id: 0 });
-    if (foundAdmin) return res.status(200).json({ foundAdmin });
+    const { adminId } = req.params;
+    const foundAdmin = await Admin.find({ _id: adminId }, { firstName: 1, lastName: 1, _id: 0 });
+    if (foundAdmin) return res.status(200).json({ message: foundAdmin });
     return res.status(404).json({ message: 'Admin not found' });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError)
@@ -56,4 +63,4 @@ const getAdminById = async (req, res) => {
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
 };
-module.exports.getAdminById = [getAdminById];
+module.exports.getAdminById = [auth.authentication, auth.authorizationAdmin, getAdminById];
