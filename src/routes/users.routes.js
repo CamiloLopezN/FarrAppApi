@@ -12,9 +12,9 @@ router.get('/', (req, res) => {
 
 router.post('/login', validator(login), userController.login);
 router.put(
-  '/request-desactive/:idToReqDesactive',
+  '/request-deactivation/:idToReqDeactive',
   auth.authentication,
-  userController.reqDesactiveUser,
+  userController.reqDeactiveUser,
 );
 
 module.exports = router;
