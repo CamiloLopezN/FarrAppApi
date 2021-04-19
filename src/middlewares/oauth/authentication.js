@@ -1,28 +1,47 @@
 const oauth = {};
 
 const jwt = require('jsonwebtoken');
+const roles = require('./roles');
 
 const config = {
   expiresSessionIn: '1d',
 };
 
-oauth.authorizeCompany = async (req, res, next) => {
+oauth.authentication = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
-  if (token == null)
+  if (!token)
     return res
       .status(401)
       .json({ message: 'Acceso no autorizado, se debe proporcionar un token valido' }); // if there isn't any token
 
-  jwt.verify(token, process.env.KEY_SECRET_TOKEN, (err, user) => {
+  await jwt.verify(token, process.env.KEY_SECRET_TOKEN, (err, payload) => {
     if (err) return res.status(403).json({ message: 'Usuario invalido, el token no es valido' });
-    // eslint-disable-next-line no-underscore-dangle
-    if (user.rol !== 'company') {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-    req.user = user.id;
+    req.payload = payload;
     return next();
   });
+  return true;
+};
+
+oauth.authorizationAdmin = async (req, res, next) => {
+  const { payload } = req;
+  if (!payload.role === roles.adminRole) return res.status(403).json({ message: 'Forbidden' });
+  req.id = payload.roleId;
+  return next();
+};
+
+oauth.authorizationCompany = async (req, res, next) => {
+  const { payload } = req;
+  if (!payload.role === roles.companyRole) return res.status(403).json({ message: 'Forbidden' });
+  req.id = payload.roleId;
+  return next();
+};
+
+oauth.authorizationAdminORCompany = async (req, res, next) => {
+  const { payload } = req;
+  console.log(payload.roles);
+  if (!payload.roles.includes('admin')) return res.status(403).json({ message: 'Forbidden' });
+
   return next();
 };
 
