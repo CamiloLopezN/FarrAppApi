@@ -29,7 +29,7 @@ const postAdmin = async (req, res) => {
 
       // eslint-disable-next-line no-underscore-dangle
       const admin = new Admin({ userId: savedUser._id, firstName, lastName });
-      await admin.save(); 
+      await admin.save();
       return res.status(200).json({ message: 'Registro exitoso' });
     }
   } catch (error) {
@@ -41,3 +41,19 @@ const postAdmin = async (req, res) => {
   }
 };
 module.exports.postAdmin = [validation(postAdminVal), postAdmin];
+
+const getAdminById = async (req, res) => {
+  try {
+    const idAdmin = req.user;
+    const foundAdmin = await Admin.find({ _id: idAdmin }, { firstName: 1, lastName: 1, _id: 0 });
+    if (foundAdmin) return res.status(200).json({ foundAdmin });
+    return res.status(404).json({ message: 'Admin not found' });
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
+    return res.status(500).json({ message: `internal server error  ${error}` });
+  }
+};
+module.exports.getAdminById = [getAdminById];
