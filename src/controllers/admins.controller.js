@@ -42,9 +42,9 @@ const postAdmin = async (req, res) => {
 };
 module.exports.postAdmin = [validation(postAdminVal), postAdmin];
 
-const getLoggedAdmin = async (req, res) => {
+const getAdminById = async (req, res) => {
   try {
-    const idAdmin = req.user;
+    const idAdmin = req.roleId;
     const foundAdmin = await Admin.find({ _id: idAdmin }, { firstName: 1, lastName: 1, _id: 0 });
     if (foundAdmin) return res.status(200).json({ foundAdmin });
     return res.status(404).json({ message: 'Admin not found' });
@@ -56,4 +56,4 @@ const getLoggedAdmin = async (req, res) => {
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
 };
-module.exports.getAdminById = [getLoggedAdmin];
+module.exports.getAdminById = [getAdminById];
