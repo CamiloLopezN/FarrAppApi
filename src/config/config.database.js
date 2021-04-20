@@ -12,6 +12,7 @@ const mongoOptions = {
   useUnifiedTopology: true,
   useNewUrlParser: true,
   useCreateIndex: true,
+  useFindAndModify: false,
 };
 
 // CONNECT TO DATABASE

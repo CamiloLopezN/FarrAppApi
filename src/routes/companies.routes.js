@@ -14,10 +14,16 @@ router.post(
   authorizationCompany,
   companiesController.registerEstablishment,
 );
-/*
-
-
-router.get('/:companyId/establishments', companiesController.establishmentsOfCompany);
-*/
+router.get(
+  '/:companyId/establishments',
+  authentication,
+  companiesController.establishmentsOfCompany,
+);
+router.get(
+  '/:companyId/establishment/:establishmentId',
+  authentication,
+  authorizationCompany,
+  companiesController.getEstablishmentById,
+);
 
 module.exports = router;
