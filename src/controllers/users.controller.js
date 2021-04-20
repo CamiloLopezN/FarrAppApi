@@ -49,3 +49,26 @@ module.exports.login = async (req, res) => {
   }
   return res.status(200).json({ message: token });
 };
+
+module.exports.reqDeactiveUser = async (req, res) => {
+  try {
+    const { userId } = req.payload;
+    const { idToReqDeactive } = req.params;
+    if (userId !== idToReqDeactive)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    const data = {
+      $set: {
+        hasReqDeactivation: true,
+      },
+    };
+    const update = await User.findOneAndUpdate({ _id: idToReqDeactive }, data);
+    if (!update) return res.status(404).json({ message: 'Resource not found' });
+    return res.status(200).json({ message: 'Operación realizada satisfactoriamente!' });
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
+    return res.status(500).json({ message: `internal server error  ${error}` });
+  }
+};

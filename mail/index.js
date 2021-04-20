@@ -1,0 +1,84 @@
+const sgMail = require('@sendgrid/mail');
+
+const sgAPIKey = process.env.SG_KEY;
+const sgSender = process.env.SG_SENDER;
+
+sgMail.setApiKey(sgAPIKey);
+
+const sendMail = (fromMail, toMail, subject, text, html) => {
+  const message = {
+    to: toMail,
+    from: fromMail,
+    subject,
+    text,
+    html,
+  };
+  (async () => {
+    try {
+      await sgMail.send(message);
+    } catch (error) {
+      console.error(error);
+      if (error.response) {
+        console.error(error.response.body);
+      }
+    }
+  })();
+};
+
+function sendValidation(userMail, token, validationURL) {
+  const subject = `Valida tu cuenta en FarrApp`;
+  const text = `Gracias por registrarte en FarrApp.\n Para validar tu cuenta, ingresa al siguiente enlace:\n ${validationURL}${token}`;
+  const url = `${validationURL}/?token=${token}`;
+  const html = `<html>
+       <body>
+           <p>¡Gracias por registrarte en FarrApp!<br>
+               Para validar tu cuenta, ingresa al siguiente enlace:<br>
+           </p>
+           <a href="http://${url}">Validar cuenta</a>
+       </body>
+       </html>`;
+  sendMail(sgSender, userMail, subject, text, html);
+}
+
+function sendExpectVerifyCompany(userMail, companyName) {
+  const subject = `Solicitud de registro de empresa en FarrApp`;
+  const text =
+    `Hola, ${companyName}. Tu solicitud para unirte a FarrApp ha sido recibida. ` +
+    `Pronto un asesor se comunicará contigo para continuar con el proceso de registro. ` +
+    `Equipo de desarrollo de FarrApp`;
+  const html = text;
+  sendMail(sgSender, userMail, subject, text, html);
+}
+
+function sendExpectCreateUserByAdmin(userMail, userName, generatedPassword) {
+  const subject = `Solicitud de registro en FarrApp`;
+  const text =
+    `Hola, ${userName}. ` +
+    `Te informamos que tu cuenta ha sido creada. Puedes ingresar con los siguientes datos: ` +
+    `Correo electrónico: ${userMail} ` +
+    `Contraseña: ${generatedPassword} ` +
+    `Recuerda cambiar la contraseña en tu primer inicio de sesión. ` +
+    `Equipo de desarrollo de FarrApp`;
+  const html = text;
+  sendMail(sgSender, userMail, subject, text, html);
+}
+
+function sendRecoverPassword(userMail, tempPassword) {
+  const subject = `Recuperación de contraseña`;
+  const text =
+    `Hola. ` +
+    `Solicitaste la recuperación de tu contraseña. ` +
+    ` Asignamos una contraseña temporal para que puedas acceder a tu cuenta: ` +
+    `Contraseña temporal: ${tempPassword} ` +
+    `Recuerda cambiar la contraseña en tu siguiente inicio de sesión. ` +
+    `Equipo de desarrollo de FarrApp`;
+  const html = text;
+  sendMail(sgSender, userMail, subject, text, html);
+}
+
+module.exports = {
+  sendValidation,
+  sendExpectVerifyCompany,
+  sendExpectCreateUserByAdmin,
+  sendRecoverPassword,
+};
