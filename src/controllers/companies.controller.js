@@ -160,7 +160,7 @@ async function registerEstablishment(req, res) {
     const establishmentSaved = await establishment.save();
     const reviewEstablishment = {
       // eslint-disable-next-line no-underscore-dangle
-      id: establishmentSaved._id,
+      establishmentId: establishmentSaved._id,
       establishmentName: establishmentSaved.establishmentName,
       city: establishmentSaved.location.city,
       address: establishmentSaved.location.address,
@@ -222,5 +222,49 @@ async function getEstablishmentById(req, res) {
 }
 
 companyCtrl.getEstablishmentById = [getEstablishmentById];
+
+async function updateEstablishmentById(req, res) {
+  const { companyId, establishmentId } = req.params;
+  if (companyId !== req.id)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+  const { body } = req;
+  const data = {
+    $set: body,
+  };
+
+  try {
+    const updated = await Establishment.findOneAndUpdate({ _id: establishmentId }, data);
+    if (!updated) return res.status(404).json({ message: 'resource not found' });
+
+    const establishmentUpdated = await Establishment.findOne({ _id: establishmentId });
+
+    const establishmentPreview = {
+      // eslint-disable-next-line no-underscore-dangle
+      establishmentId: establishmentUpdated._id,
+      establishmentName: establishmentUpdated.establishmentName,
+      city: establishmentUpdated.location.city,
+      address: establishmentUpdated.location.address,
+      imageUrl: establishmentUpdated.photoUrls[0],
+      isActive: establishmentUpdated.isActive,
+    };
+
+    await Company.updateOne(
+      // eslint-disable-next-line no-underscore-dangle
+      { _id: companyId, 'establishments.establishmentId': updated._id },
+      { $set: { 'establishments.$': establishmentPreview } },
+    );
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `internal server error`, err });
+  }
+
+  return res.status(200).json({ message: 'update complete' });
+}
+
+companyCtrl.updateEstablishmentById = [updateEstablishmentById];
 
 module.exports = companyCtrl;
