@@ -26,4 +26,11 @@ router.get(
   companiesController.getEstablishmentById,
 );
 
+router.post(
+  '/:companyId/establishment/:establishmentId',
+  authentication,
+  authorizationCompany,
+  companiesController.updateEstablishmentById,
+);
+
 module.exports = router;
