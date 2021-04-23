@@ -5,10 +5,10 @@ const sgSender = process.env.SG_SENDER;
 
 sgMail.setApiKey(sgAPIKey);
 
-const sendMail = (fromMail, toMail, subject, text, html) => {
+const sendMail = (toMail, subject, text, html) => {
   const message = {
     to: toMail,
-    from: fromMail,
+    from: sgSender,
     subject,
     text,
     html,
@@ -17,8 +17,10 @@ const sendMail = (fromMail, toMail, subject, text, html) => {
     try {
       await sgMail.send(message);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(error);
       if (error.response) {
+        // eslint-disable-next-line no-console
         console.error(error.response.body);
       }
     }
@@ -37,7 +39,7 @@ function sendValidation(userMail, token, validationURL) {
            <a href="http://${url}">Validar cuenta</a>
        </body>
        </html>`;
-  sendMail(sgSender, userMail, subject, text, html);
+  sendMail(userMail, subject, text, html);
 }
 
 function sendExpectVerifyCompany(userMail, companyName) {
@@ -47,7 +49,7 @@ function sendExpectVerifyCompany(userMail, companyName) {
     `Pronto un asesor se comunicará contigo para continuar con el proceso de registro. ` +
     `Equipo de desarrollo de FarrApp`;
   const html = text;
-  sendMail(sgSender, userMail, subject, text, html);
+  sendMail(userMail, subject, text, html);
 }
 
 function sendExpectCreateUserByAdmin(userMail, userName, generatedPassword) {
@@ -60,7 +62,7 @@ function sendExpectCreateUserByAdmin(userMail, userName, generatedPassword) {
     `Recuerda cambiar la contraseña en tu primer inicio de sesión. ` +
     `Equipo de desarrollo de FarrApp`;
   const html = text;
-  sendMail(sgSender, userMail, subject, text, html);
+  sendMail(userMail, subject, text, html);
 }
 
 function sendRecoverPassword(userMail, tempPassword) {
@@ -73,7 +75,7 @@ function sendRecoverPassword(userMail, tempPassword) {
     `Recuerda cambiar la contraseña en tu siguiente inicio de sesión. ` +
     `Equipo de desarrollo de FarrApp`;
   const html = text;
-  sendMail(sgSender, userMail, subject, text, html);
+  sendMail(userMail, subject, text, html);
 }
 
 module.exports = {

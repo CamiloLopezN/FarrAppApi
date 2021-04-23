@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/users.controller');
 const validator = require('../middlewares/validations/validation');
-const { login } = require('../middlewares/validations/user.joi');
+const { login, email } = require('../middlewares/validations/user.joi');
 const auth = require('../middlewares/oauth/authentication');
 /* GET users listing. */
 router.get('/', (req, res) => {
@@ -16,5 +16,6 @@ router.put(
   auth.authentication,
   userController.reqDeactiveUser,
 );
+router.post('/recover-password', validator(email), userController.recoverPassword);
 
 module.exports = router;
