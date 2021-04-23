@@ -1,7 +1,10 @@
 const { Schema } = require('mongoose');
 
 const establishmentPreviewSchema = new Schema({
-  id: { type: Schema.Types.ObjectId, required: true, unique: true, ref: 'establishments' },
+  establishmentId: {
+    type: String,
+    required: true,
+  },
   establishmentName: { type: String, required: true },
   city: { type: String, required: true },
   address: { type: String, required: true },

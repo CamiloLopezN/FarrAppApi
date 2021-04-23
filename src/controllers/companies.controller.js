@@ -7,6 +7,7 @@ const { signUpVal, updateCompany } = require('../middlewares/validations/company
 const validation = require('../middlewares/validations/validation');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
+const { authorizationAdminOrCompany } = require('../middlewares/oauth/authentication');
 
 /*
 Registrar una compañia
@@ -14,42 +15,51 @@ Registrar una compañia
 async function signUp(req, res) {
   const { email, password, companyName, address, contactNumber, nit } = req.body;
   let generatePass;
-  try {
-    const user = new User({
-      email,
-      password,
-      hasReqDeactivation: false,
-      isActive: false,
-      role: 'company',
-      isVerified: false,
-    });
+  /* try { */
+  const user = new User({
+    email,
+    password,
+    hasReqDeactivation: false,
+    isActive: false,
+    role: 'company',
+    isVerified: false,
+  });
 
-    if (password) {
-      user.password = await user.encryptPassword(password);
-    } else {
-      generatePass = generatePasswordRand(8, 'alf');
-      user.password = await user.encryptPassword(generatePass);
-    }
-
-    const saved = await user.save();
-    const company = new Company({
-      companyName,
-      address,
-      contactNumber,
-      nit,
-      // eslint-disable-next-line no-underscore-dangle
-      userId: saved._id,
-    });
-    await company.save();
-  } catch (err) {
-    if (err instanceof mongoose.Error.ValidationError)
-      return res
-        .status(400)
-        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error  ${err}` });
+  if (password) {
+    user.password = await user.encryptPassword(password);
+  } else {
+    generatePass = generatePasswordRand(8, 'alf');
+    user.password = await user.encryptPassword(generatePass);
   }
 
-  return res.status(200).json({ message: 'registro completo' });
+  await user
+    .save()
+    .then(async (savedUser) => {
+      const company = new Company({
+        companyName,
+        address,
+        contactNumber,
+        nit,
+        // eslint-disable-next-line no-underscore-dangle
+        userId: savedUser._id,
+      });
+      await company
+        .save()
+        .then(() => {
+          return res.status(200).json({ message: 'registro completo' });
+        })
+        .catch(async (err) => {
+          if (err instanceof mongoose.Error.ValidationError) {
+            // eslint-disable-next-line no-underscore-dangle
+            await User.remove({ _id: savedUser._id });
+            return res.status(400).json({ message: err });
+          }
+          return res.status(400).json({ message: err });
+        });
+    })
+    .catch((err) => {
+      return res.status(400).json({ message: err });
+    });
 }
 
 companyCtrl.signUp = [validation(signUpVal), signUp];
@@ -86,16 +96,7 @@ Un usuario admin o company con los permisos solicita toda la información de un 
  */
 async function getCompanyById(req, res) {
   const { companyId } = req.params;
-  let id;
-  if (req.payload.role === roles.adminRole) {
-    id = companyId;
-  } else if (req.payload.role === roles.companyRole) {
-    if (!req.payload.roleId === companyId)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    id = companyId;
-  } else {
-    return res.status(403).json({ message: 'Forbidden' });
-  }
+  const id = authorizationAdminOrCompany(req, res, companyId);
 
   try {
     const doc = await Company.findOne({ _id: id }, { __v: 0 });
@@ -127,7 +128,7 @@ async function updateProfile(req, res) {
   };
 
   try {
-    const update = await Company.updateOne({ _id: req.id }, data);
+    const update = await Company.findOneAndUpdate({ _id: req.id }, data);
     if (!update) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
@@ -158,6 +159,8 @@ async function registerEstablishment(req, res) {
     };
     const establishmentSaved = await establishment.save();
     const reviewEstablishment = {
+      // eslint-disable-next-line no-underscore-dangle
+      establishmentId: establishmentSaved._id,
       establishmentName: establishmentSaved.establishmentName,
       city: establishmentSaved.location.city,
       address: establishmentSaved.location.address,
@@ -165,7 +168,48 @@ async function registerEstablishment(req, res) {
       isActive: establishmentSaved.isActive,
     };
 
-    console.log(reviewEstablishment);
+    await Company.updateOne({ _id: companyId }, { $push: { establishments: reviewEstablishment } });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `internal server error  ${err}` });
+  }
+  return res.status(200).json({ message: 'establescimiento registrado' });
+}
+
+companyCtrl.registerEstablishment = [validation(postEstablishmentVal), registerEstablishment];
+
+async function establishmentsOfCompany(req, res) {
+  const { companyId } = req.params;
+  const id = authorizationAdminOrCompany(req, res, companyId);
+  let establishments;
+
+  try {
+    establishments = await Company.findOne({ _id: id }, { establishments: 1, _id: 0 });
+    if (!establishments) return res.status(404).json({ message: 'resource not found' });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `internal server error  ${err}` });
+  }
+  return res.status(200).json({ message: establishments });
+}
+
+companyCtrl.establishmentsOfCompany = [establishmentsOfCompany];
+
+async function getEstablishmentById(req, res) {
+  const { companyId, establishmentId } = req.params;
+  if (companyId !== req.id)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+  let establishment;
+  try {
+    establishment = await Establishment.findOne({ _id: establishmentId }, { __v: 0 });
+    if (!establishment) return res.status(404).json({ message: 'resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
@@ -174,25 +218,53 @@ async function registerEstablishment(req, res) {
     return res.status(500).json({ message: `internal server error  ${err}` });
   }
 
-  return res.status(200).json({ message: 'establescimiento registrado' });
+  return res.status(200).json({ message: establishment });
 }
 
-companyCtrl.registerEstablishment = [validation(postEstablishmentVal), registerEstablishment];
+companyCtrl.getEstablishmentById = [getEstablishmentById];
 
-async function establishmentsOfCompany(req, res) {
-  Company.find({ _id: req.params.companyId }, { establishments: 1, _id: 0 })
-    .then((establishments) => {
-      res.status(200).json({ message: establishments });
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError)
-        return res
-          .status(400)
-          .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-      return res.status(500).json({ message: `internal server error  ${err}` });
-    });
+async function updateEstablishmentById(req, res) {
+  const { companyId, establishmentId } = req.params;
+  if (companyId !== req.id)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+  const { body } = req;
+  const data = {
+    $set: body,
+  };
+
+  try {
+    const updated = await Establishment.findOneAndUpdate({ _id: establishmentId }, data);
+    if (!updated) return res.status(404).json({ message: 'resource not found' });
+
+    const establishmentUpdated = await Establishment.findOne({ _id: establishmentId });
+
+    const establishmentPreview = {
+      // eslint-disable-next-line no-underscore-dangle
+      establishmentId: establishmentUpdated._id,
+      establishmentName: establishmentUpdated.establishmentName,
+      city: establishmentUpdated.location.city,
+      address: establishmentUpdated.location.address,
+      imageUrl: establishmentUpdated.photoUrls[0],
+      isActive: establishmentUpdated.isActive,
+    };
+
+    await Company.updateOne(
+      // eslint-disable-next-line no-underscore-dangle
+      { _id: companyId, 'establishments.establishmentId': updated._id },
+      { $set: { 'establishments.$': establishmentPreview } },
+    );
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `internal server error`, err });
+  }
+
+  return res.status(200).json({ message: 'update complete' });
 }
 
-companyCtrl.establishmentsOfCompany = [establishmentsOfCompany];
+companyCtrl.updateEstablishmentById = [updateEstablishmentById];
 
 module.exports = companyCtrl;
