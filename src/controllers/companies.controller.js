@@ -1,7 +1,7 @@
 const companyCtrl = {};
 const mongoose = require('mongoose');
 
-const { Company, Establishment, User } = require('../models/entity.model');
+const { Company, Establishment, User, Event } = require('../models/entity.model');
 const { postEstablishmentVal } = require('../middlewares/validations/establishment.joi');
 const { signUpVal, updateCompany } = require('../middlewares/validations/company.joi');
 const validation = require('../middlewares/validations/validation');
@@ -149,7 +149,7 @@ async function registerEstablishment(req, res) {
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
   try {
     const establishment = new Establishment(req.body);
-    const company = await Company.findOne({ _id: req.id }, { _id: 1, companyName: 1 });
+    const company = await Company.findOne({ _id: req.id }, { _id: 1, companyName: 1 }).orFail();
     establishment.isActive = true;
     establishment.averageRating = 0;
     establishment.company = {
@@ -266,5 +266,47 @@ async function updateEstablishmentById(req, res) {
 }
 
 companyCtrl.updateEstablishmentById = [updateEstablishmentById];
+
+async function registerEvent(req, res) {
+  const { companyId, establishmentId } = req.params;
+  if (!companyId || !establishmentId)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+
+  try {
+    const establishmentSearch = await Establishment.findOne(
+      { _id: establishmentId },
+      { establishmentName: 1, _id: 1 },
+    ).orFail();
+    const event = new Event(req.body);
+    const establishment = {
+      // eslint-disable-next-line no-underscore-dangle
+      establishmentId: establishmentSearch._id,
+      establishmentName: establishmentSearch.establishmentName,
+    };
+
+    event.establishment = establishment;
+    const eventSaved = await event.save();
+    const eventPreview = {
+      // eslint-disable-next-line no-underscore-dangle
+      eventId: eventSaved._id,
+      eventName: event.eventName,
+      city: event.location.city,
+      start: event.start,
+      end: event.end,
+      imageUrl: event.photoUrls[0],
+    };
+    await Establishment.updateOne({ _id: establishmentId }, { $push: { events: eventPreview } });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `internal server error`, err });
+  }
+  return res.status(200).json({ message: ' registro completo' });
+}
+
+companyCtrl.registerEvent = [registerEvent];
 
 module.exports = companyCtrl;
