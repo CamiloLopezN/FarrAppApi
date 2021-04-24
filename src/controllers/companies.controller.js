@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { Company, Establishment, User, Event } = require('../models/entity.model');
 const { postEstablishmentVal } = require('../middlewares/validations/establishment.joi');
 const { signUpVal, updateCompany } = require('../middlewares/validations/company.joi');
+const { postEventVal } = require('../middlewares/validations/event.joi');
 const validation = require('../middlewares/validations/validation');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
@@ -307,6 +308,6 @@ async function registerEvent(req, res) {
   return res.status(200).json({ message: ' registro completo' });
 }
 
-companyCtrl.registerEvent = [registerEvent];
+companyCtrl.registerEvent = [validation(postEventVal), registerEvent];
 
 module.exports = companyCtrl;
