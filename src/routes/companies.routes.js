@@ -20,17 +20,24 @@ router.get(
   companiesController.establishmentsOfCompany,
 );
 router.get(
-  '/:companyId/establishment/:establishmentId',
+  '/:companyId/establishments/:establishmentId',
   authentication,
   authorizationCompany,
   companiesController.getEstablishmentById,
 );
 
 router.post(
-  '/:companyId/establishment/:establishmentId',
+  '/:companyId/establishments/:establishmentId',
   authentication,
   authorizationCompany,
   companiesController.updateEstablishmentById,
+);
+
+router.post(
+  '/:companyId/establishments/:establishmentId/events',
+  authentication,
+  authorizationCompany,
+  companiesController.registerEvent,
 );
 
 module.exports = router;

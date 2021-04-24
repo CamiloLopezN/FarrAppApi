@@ -17,7 +17,7 @@ const establishmentSchema = new Schema({
   averageRating: { type: Number },
   company: {
     type: {
-      companyId: { type: Schema.Types.ObjectId, required: true },
+      companyId: { type: String, required: true },
       companyName: { type: String, required: true },
     },
     required: true,
