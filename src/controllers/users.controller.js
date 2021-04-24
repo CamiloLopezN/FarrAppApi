@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { User, Company, Admin, Client } = require('../models/entity.model');
-const roles = require('../middlewares/oauth/roles');
 const { generateToken } = require('../middlewares/oauth/authentication');
+const roles = require('../middlewares/oauth/roles');
+const utils = require('./utils');
+const { generatePasswordRand } = require('../utilities/generatePass');
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -71,4 +73,30 @@ module.exports.reqDeactiveUser = async (req, res) => {
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
+};
+
+// eslint-disable-next-line consistent-return
+module.exports.recoverPassword = async (req, res) => {
+  const { email } = req.body;
+  const foundUser = await User.findOne({ email });
+
+  if (!foundUser)
+    return res.status(404).json({
+      message: 'Se produjo un error, el correo ingresado no se encuentra registrado',
+    });
+  if (!foundUser.isActive)
+    return res.status(403).json({ message: 'Esta cuenta se encuentra desactivada.' });
+  if (foundUser.hasReqDeactivation)
+    return res
+      .status(403)
+      .json({ message: 'Esta cuenta se encuentra en proceso de desativación.' });
+
+  const password = generatePasswordRand(8, 'alf');
+  const data = { $set: { password } };
+  data.password = await foundUser.encryptPassword(password);
+  await User.updateOne({ email }, data, (err) => {
+    if (err) return res.status(500).json({ message: 'Se produjo un problema en la operación.' });
+    utils.sendRecoverPassword(email, password);
+    return res.status(200).json({ message: 'Correo de recuperación enviado.' });
+  });
 };
