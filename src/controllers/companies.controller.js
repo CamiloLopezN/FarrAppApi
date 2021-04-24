@@ -47,7 +47,7 @@ async function signUp(req, res) {
       await company
         .save()
         .then(() => {
-          return res.status(200).json({ message: 'registro completo' });
+          return res.status(200).json({ message: 'Successful registration' });
         })
         .catch(async (err) => {
           if (err instanceof mongoose.Error.ValidationError) {
@@ -86,7 +86,7 @@ async function getCompanies(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
   }
   return res.status(200).json({ message: companies });
 }
@@ -101,7 +101,7 @@ async function getCompanyById(req, res) {
 
   try {
     const doc = await Company.findOne({ _id: id }, { __v: 0 });
-    if (!doc) return res.status(404).json({ message: 'resource not found' });
+    if (!doc) return res.status(404).json({ message: 'Resource not found' });
 
     return res.status(200).json({ message: doc });
   } catch (err) {
@@ -109,7 +109,7 @@ async function getCompanyById(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
   }
 }
 
@@ -136,10 +136,10 @@ async function updateProfile(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
   }
 
-  return res.status(200).json({ message: 'actualización correcta' });
+  return res.status(200).json({ message: 'Successful update' });
 }
 
 companyCtrl.updateProfile = [validation(updateCompany), updateProfile];
@@ -175,9 +175,9 @@ async function registerEstablishment(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
   }
-  return res.status(200).json({ message: 'establescimiento registrado' });
+  return res.status(200).json({ message: 'Successful registration' });
 }
 
 companyCtrl.registerEstablishment = [validation(postEstablishmentVal), registerEstablishment];
@@ -189,13 +189,13 @@ async function establishmentsOfCompany(req, res) {
 
   try {
     establishments = await Company.findOne({ _id: id }, { establishments: 1, _id: 0 });
-    if (!establishments) return res.status(404).json({ message: 'resource not found' });
+    if (!establishments) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
   }
   return res.status(200).json({ message: establishments });
 }
@@ -210,13 +210,13 @@ async function getEstablishmentById(req, res) {
   let establishment;
   try {
     establishment = await Establishment.findOne({ _id: establishmentId }, { __v: 0 });
-    if (!establishment) return res.status(404).json({ message: 'resource not found' });
+    if (!establishment) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
   }
 
   return res.status(200).json({ message: establishment });
@@ -236,7 +236,7 @@ async function updateEstablishmentById(req, res) {
 
   try {
     const updated = await Establishment.findOneAndUpdate({ _id: establishmentId }, data);
-    if (!updated) return res.status(404).json({ message: 'resource not found' });
+    if (!updated) return res.status(404).json({ message: 'Resource not found' });
 
     const establishmentUpdated = await Establishment.findOne({ _id: establishmentId });
 
@@ -260,10 +260,10 @@ async function updateEstablishmentById(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error`, err });
+    return res.status(500).json({ message: `Internal server error`, err });
   }
 
-  return res.status(200).json({ message: 'update complete' });
+  return res.status(200).json({ message: 'Update complete' });
 }
 
 companyCtrl.updateEstablishmentById = [updateEstablishmentById];
@@ -303,9 +303,9 @@ async function registerEvent(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `internal server error`, err });
+    return res.status(500).json({ message: `Internal server error`, err });
   }
-  return res.status(200).json({ message: ' registro completo' });
+  return res.status(200).json({ message: 'Successful registration' });
 }
 
 companyCtrl.registerEvent = [validation(postEventVal), registerEvent];
