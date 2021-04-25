@@ -14,4 +14,10 @@ clientValidation.postClientVal = Joi.object({
   birthdate: Joi.string().max(30).required(),
   gender: Joi.string().max(10).required(),
 });
+clientValidation.updateClientVal = Joi.object({
+  firstName: Joi.string().max(30).required(),
+  lastName: Joi.string().max(30).required(),
+  birthdate: Joi.string().max(30).required(),
+  gender: Joi.string().max(10).required(),
+});
 module.exports = clientValidation;

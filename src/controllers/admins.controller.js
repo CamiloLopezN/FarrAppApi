@@ -21,7 +21,7 @@ const postAdmin = async (req, res) => {
       const newUser = new User({
         email,
         password,
-        role: roles.adminRole,
+        role: roles.admin,
         hasReqDeactivation: false,
         isActive: true,
         isVerified: true,
