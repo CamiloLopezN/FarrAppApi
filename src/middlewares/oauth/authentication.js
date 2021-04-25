@@ -59,6 +59,20 @@ oauth.authorizationAdminOrCompany = (req, res, param) => {
   return id;
 };
 
+oauth.authorizationAdminOrClient = (req, res, param) => {
+  let id;
+  if (req.payload.role === roles.admin) {
+    id = param;
+  } else if (req.payload.role === roles.client) {
+    if (!req.payload.roleId === param)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    id = param;
+  } else {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  return id;
+};
+
 oauth.generateToken = (payload) => {
   return jwt.sign(payload, config.secretKey, {
     expiresIn: config.expiresSessionIn,
