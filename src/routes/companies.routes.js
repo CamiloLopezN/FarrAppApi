@@ -40,4 +40,11 @@ router.post(
   companiesController.registerEvent,
 );
 
+router.get(
+  '/:companyId/establishments/:establishmentId/events',
+  authentication,
+  authorizationCompany,
+  companiesController.getEvents,
+);
+
 module.exports = router;
