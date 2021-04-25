@@ -7,6 +7,7 @@ const eventPreviewSchema = new Schema({
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   imageUrl: { type: String, required: true },
+  status: { type: String, required: true },
 });
 
 module.exports = eventPreviewSchema;
