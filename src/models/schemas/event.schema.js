@@ -8,7 +8,7 @@ const eventSchema = new Schema({
   description: { type: String, required: true },
   establishment: {
     type: {
-      establishmentId: { type: Schema.Types.ObjectId, required: true },
+      establishmentId: { type: String, required: true },
       establishmentName: { type: String, required: true },
     },
     required: true,

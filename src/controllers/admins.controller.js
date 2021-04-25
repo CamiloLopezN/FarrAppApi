@@ -14,7 +14,7 @@ const postAdmin = async (req, res) => {
     const foundAdmin = await User.findOne({ email });
     if (foundAdmin)
       return res.status(409).json({
-        message: 'Invalid Username or Password!',
+        message: 'Invalid email or Password!',
       });
     const validationPass = validatorPass.validate(password, { list: true });
     if (validationPass.length === 0) {
