@@ -1,4 +1,5 @@
 const { Schema } = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const eventPreviewSchema = require('./eventPreview.schema');
 const establishmentPreviewSchema = require('./establishmentPreview.schema');
@@ -12,5 +13,7 @@ const clientSchema = new Schema({
   interests: [eventPreviewSchema],
   follows: [establishmentPreviewSchema],
 });
+
+clientSchema.plugin(mongoosePaginate);
 
 module.exports = clientSchema;
