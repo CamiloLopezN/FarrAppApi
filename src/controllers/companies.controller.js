@@ -287,6 +287,7 @@ async function registerEvent(req, res) {
     };
 
     event.establishment = establishment;
+    event.status = event.status[0].toUpperCase() + event.status.slice(1);
     const eventSaved = await event.save();
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
@@ -296,6 +297,7 @@ async function registerEvent(req, res) {
       start: event.start,
       end: event.end,
       imageUrl: event.photoUrls[0],
+      status: event.status,
     };
     await Establishment.updateOne({ _id: establishmentId }, { $push: { events: eventPreview } });
   } catch (err) {
@@ -373,5 +375,63 @@ async function getEventById(req, res) {
 }
 
 companyCtrl.getEventbyId = [getEventById];
+
+async function updateEvent(req, res) {
+  const { companyId, establishmentId, eventId } = req.params;
+  if (!companyId || !establishmentId || !eventId)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+
+  try {
+    const establishment = await Establishment.findOne({
+      $and: [
+        { _id: { $eq: establishmentId } },
+        { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
+        { 'events.eventId': { $in: [eventId] } },
+      ],
+    });
+
+    if (!establishment)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+    const { body } = req;
+    body.status = body.status[0].toUpperCase() + body.status.slice(1);
+    const data = {
+      $set: body,
+    };
+
+    const updated = await Event.findOneAndUpdate({ _id: eventId }, data);
+    if (!updated) return res.status(404).json({ message: 'Resource not found' });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `Internal server error`, err });
+  }
+
+  const eventUpdated = await Event.findOne(
+    { _id: eventId },
+    { _id: 1, eventName: 1, 'location.city': 1, start: 1, end: 1, photoUrls: 1, status: 1 },
+  );
+
+  const eventPreview = {
+    // eslint-disable-next-line no-underscore-dangle
+    eventId: eventUpdated._id,
+    eventName: eventUpdated.eventName,
+    city: eventUpdated.location.city,
+    start: eventUpdated.start,
+    end: eventUpdated.end,
+    imageUrl: eventUpdated.photoUrls[0],
+    status: eventUpdated.status,
+  };
+  await Establishment.updateOne(
+    { _id: establishmentId, 'events.eventId': eventPreview.eventId },
+    { $set: { 'events.$': eventPreview } },
+  );
+  return res.status(200).json({ message: 'Update complete' });
+}
+
+companyCtrl.updateEvent = [updateEvent];
 
 module.exports = companyCtrl;
