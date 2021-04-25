@@ -20,5 +20,6 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api/companies', require('./routes/companies.routes'));
 app.use('/api/admins', require('./routes/admins.routes'));
+app.use('/api/clients', require('./routes/clients.routes'));
 
 module.exports = app;
