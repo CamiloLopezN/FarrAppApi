@@ -9,7 +9,7 @@ const establishmentPreviewSchema = new Schema({
   city: { type: String, required: true },
   address: { type: String, required: true },
   imageUrl: { type: String, required: true },
-  isActive: { type: String, required: true },
+  isActive: { type: Boolean, required: true },
 });
 
 module.exports = establishmentPreviewSchema;
