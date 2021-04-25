@@ -109,5 +109,28 @@ const getClientById = async (req, res) => {
     return res.status(500).json({ message: `Internal server error  ${err}` });
   }
 };
-
 module.exports.getClientById = [auth.authentication, getClientById];
+
+const getClients = async (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const page = parseInt(req.query.page, 10) || 1;
+  if (!req.payload.role === roles.adminRole) return res.status(403).json({ message: 'Forbidden' });
+  const projection = {
+    createdAt: 0,
+    updatedAt: 0,
+    __v: 0,
+  };
+  let clients;
+  try {
+    clients = await Client.paginate({}, { projection, limit, page });
+    if (!clients) return res.status(404).json({ message: 'Resource not found' });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
+  }
+  return res.status(200).json({ message: clients });
+};
+module.exports.getClients = [auth.authentication, getClients];
