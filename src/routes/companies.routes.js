@@ -41,6 +41,13 @@ router.post(
 );
 
 router.get(
+  '/:companyId/establishments/:establishmentId/events',
+  authentication,
+  authorizationCompany,
+  companiesController.getEvents,
+);
+
+router.get(
   '/:companyId/establishments/:establishmentId/events/:eventId',
   authentication,
   authorizationCompany,
