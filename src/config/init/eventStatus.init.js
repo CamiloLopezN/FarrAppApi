@@ -2,7 +2,7 @@ const { EventStatus } = require('../../models/entity.model');
 
 module.exports.initEventStatus = async () => {
   const terminated = new EventStatus({
-    eventStatusName: 'Termminado',
+    eventStatusName: 'Terminado',
     description: 'El evento ha concluido',
   });
 
