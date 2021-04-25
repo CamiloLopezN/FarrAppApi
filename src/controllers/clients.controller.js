@@ -93,3 +93,21 @@ module.exports.updateClientProfile = [
   validation(updateClientVal),
   updateClientProfile,
 ];
+
+const getClientById = async (req, res) => {
+  const { clientId } = req.params;
+  const id = auth.authorizationAdminOrClient(req, res, clientId);
+  try {
+    const doc = await Client.findOne({ _id: id }, { __v: 0 });
+    if (!doc) return res.status(404).json({ message: 'Resource not found' });
+    return res.status(200).json({ message: doc });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
+  }
+};
+
+module.exports.getClientById = [auth.authentication, getClientById];
