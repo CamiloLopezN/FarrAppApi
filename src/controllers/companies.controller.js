@@ -22,7 +22,7 @@ async function signUp(req, res) {
     password,
     hasReqDeactivation: false,
     isActive: false,
-    role: 'company',
+    role: roles.companyRole,
     isVerified: false,
   });
 

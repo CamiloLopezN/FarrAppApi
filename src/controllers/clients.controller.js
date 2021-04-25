@@ -27,22 +27,32 @@ const postClient = async (req, res) => {
         isVerified: false,
       });
       newUser.password = await newUser.encryptPassword(password);
-      const savedUser = await newUser.save();
-
-      const month = birthdate.split('-')[1] - 1;
-      const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
-      const client = new Client({
-        // eslint-disable-next-line no-underscore-dangle
-        userId: savedUser._id,
-        firstName,
-        lastName,
-        birthdate: myDate,
-        gender,
+      await newUser.save().then(async (savedUser) => {
+        const month = birthdate.split('-')[1] - 1;
+        const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
+        const client = new Client({
+          // eslint-disable-next-line no-underscore-dangle
+          userId: savedUser._id,
+          firstName,
+          lastName,
+          birthdate: myDate,
+          gender,
+        });
+        await client
+          .save()
+          .then(() => {
+            return res.status(200).json({ message: 'Successful registration' });
+          })
+          .catch(async (err) => {
+            if (err instanceof mongoose.Error.ValidationError) {
+              // eslint-disable-next-line no-underscore-dangle
+              await User.remove({ _id: savedUser._id });
+              return res.status(400).json({ message: err });
+            }
+            return res.status(400).json({ message: err });
+          });
       });
-      await client.save();
-      return res.status(200).json({ message: 'Registro exitoso' });
     }
-    return res.status(409).json({ message: `Invalid data: ${validationPass}` });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError)
       return res
