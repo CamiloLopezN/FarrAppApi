@@ -13,6 +13,7 @@ const companySchema = new Schema(
     nit: { type: String, required: true, unique: true },
     establishments: [establishmentPreviewSchema],
     events: [eventPreviewSchema],
+    customerId: { type: String },
   },
   {
     timestamps: true,

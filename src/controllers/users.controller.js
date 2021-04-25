@@ -49,7 +49,7 @@ module.exports.login = async (req, res) => {
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
     return res.status(500).json({ message: `internal server error  ${err}` });
   }
-  return res.status(200).json({ message: token });
+  return res.status(200).json({ token });
 };
 
 module.exports.reqDeactiveUser = async (req, res) => {
