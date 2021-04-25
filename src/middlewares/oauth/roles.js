@@ -1,3 +1,5 @@
-module.exports.adminRole = 'admin';
-module.exports.companyRole = 'company';
-module.exports.clientRole = 'client';
+module.exports = {
+  admin: 'admin',
+  company: 'company',
+  client: 'client',
+};
