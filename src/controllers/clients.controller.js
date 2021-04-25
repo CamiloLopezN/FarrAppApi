@@ -1,4 +1,4 @@
-require('../config/config.database');
+const mongoose = require('../config/config.database');
 
 const { Client, User } = require('../models/entity.model');
 const validatorPass = require('../middlewares/validations/password.validator');
