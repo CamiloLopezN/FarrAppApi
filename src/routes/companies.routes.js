@@ -47,4 +47,11 @@ router.get(
   companiesController.getEvents,
 );
 
+router.get(
+  '/:companyId/establishments/:establishmentId/events/:eventId',
+  authentication,
+  authorizationCompany,
+  companiesController.getEventbyId,
+);
+
 module.exports = router;
