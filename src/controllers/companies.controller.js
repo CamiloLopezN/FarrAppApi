@@ -2,9 +2,12 @@ const companyCtrl = {};
 const mongoose = require('../config/config.database');
 
 const { Company, Establishment, User, Event } = require('../models/entity.model');
-const { postEstablishmentVal } = require('../middlewares/validations/establishment.joi');
+const {
+  postEstablishmentVal,
+  updateEstablishmentVal,
+} = require('../middlewares/validations/establishment.joi');
 const { signUpVal, updateCompany } = require('../middlewares/validations/company.joi');
-const { postEventVal } = require('../middlewares/validations/event.joi');
+const { postEventVal, updateEventVal } = require('../middlewares/validations/event.joi');
 const validation = require('../middlewares/validations/validation');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
@@ -22,7 +25,7 @@ async function signUp(req, res) {
     password,
     hasReqDeactivation: false,
     isActive: false,
-    role: roles.companyRole,
+    role: roles.company,
     isVerified: false,
   });
 
@@ -238,7 +241,7 @@ async function updateEstablishmentById(req, res) {
     const updated = await Establishment.findOneAndUpdate({ _id: establishmentId }, data);
     if (!updated) return res.status(404).json({ message: 'Resource not found' });
 
-    const establishmentUpdated = await Establishment.findOne({ _id: establishmentId });
+    const establishmentUpdated = await Establishment.findOne({ _id: establishmentId }).orFail();
 
     const establishmentPreview = {
       // eslint-disable-next-line no-underscore-dangle
@@ -266,7 +269,7 @@ async function updateEstablishmentById(req, res) {
   return res.status(200).json({ message: 'Update complete' });
 }
 
-companyCtrl.updateEstablishmentById = [updateEstablishmentById];
+companyCtrl.updateEstablishmentById = [validation(updateEstablishmentVal), updateEstablishmentById];
 
 async function registerEvent(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -287,7 +290,7 @@ async function registerEvent(req, res) {
     };
 
     event.establishment = establishment;
-    event.status = event.status[0].toUpperCase() + event.status.slice(1);
+    event.status = 'Inactivo';
     const eventSaved = await event.save();
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
@@ -432,6 +435,6 @@ async function updateEvent(req, res) {
   return res.status(200).json({ message: 'Update complete' });
 }
 
-companyCtrl.updateEvent = [updateEvent];
+companyCtrl.updateEvent = [validation(updateEventVal), updateEvent];
 
 module.exports = companyCtrl;
