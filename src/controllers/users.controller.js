@@ -22,10 +22,10 @@ module.exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     }
 
-    if (user.role === roles.companyRole) {
+    if (user.role === roles.company) {
       // eslint-disable-next-line no-underscore-dangle
       roleId = await Company.findOne({ userId: user._id }, { _id: 1 });
-    } else if (user.role === roles.adminRole) {
+    } else if (user.role === roles.admin) {
       // eslint-disable-next-line no-underscore-dangle
       roleId = await Admin.findOne({ userId: user._id }, { _id: 1 });
     } else {
