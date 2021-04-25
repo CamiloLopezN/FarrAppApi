@@ -1,5 +1,5 @@
 const companyCtrl = {};
-const mongoose = require('mongoose');
+const mongoose = require('../config/config.database');
 
 const { Company, Establishment, User, Event } = require('../models/entity.model');
 const { postEstablishmentVal } = require('../middlewares/validations/establishment.joi');
@@ -309,5 +309,37 @@ async function registerEvent(req, res) {
 }
 
 companyCtrl.registerEvent = [validation(postEventVal), registerEvent];
+
+async function getEvents(req, res) {
+  const { companyId, establishmentId } = req.params;
+  if (!companyId || !establishmentId)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+  let events;
+  try {
+    const establishment = await Establishment.findOne({
+      $and: [
+        { _id: { $eq: establishmentId } },
+        { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
+      ],
+    });
+
+    if (!establishment)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+    events = await Event.find({
+      'establishment.establishmentId': mongoose.Types.ObjectId(establishmentId),
+    }).orFail();
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `Internal server error`, err });
+  }
+  return res.status(200).json({ message: events });
+}
+
+companyCtrl.getEvents = [getEvents];
 
 module.exports = companyCtrl;
