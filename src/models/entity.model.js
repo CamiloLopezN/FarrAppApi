@@ -32,6 +32,7 @@ const TicketStatus = model(
   require('./schemas/ticketStatus.schema'),
   'eventTicketStatus',
 );
+const EventStatus = model('EventStatus', require('./schemas/eventStatus.schema'), 'eventStatus');
 
 module.exports = {
   Client,
@@ -46,4 +47,5 @@ module.exports = {
   EventCategory,
   DressCode,
   TicketStatus,
+  EventStatus,
 };

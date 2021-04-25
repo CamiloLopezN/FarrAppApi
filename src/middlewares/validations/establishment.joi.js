@@ -25,4 +25,26 @@ establishmentValidation.postEstablishmentVal = Joi.object({
   }).required(),
 });
 
+establishmentValidation.updateEstablishmentVal = Joi.object({
+  establishmentName: Joi.string().max(150),
+  establishmentTypes: Joi.array().items(
+    Joi.object({
+      establishmentTypeName: Joi.string().max(50),
+      description: Joi.string().max(150),
+    }),
+  ),
+  categories: Joi.array().items(Joi.string()).max(50),
+  description: Joi.string().max(1024),
+  logoUrl: Joi.string().max(150),
+  isActive: Joi.boolean(),
+  photoUrls: Joi.array().items(Joi.string().max(200)).max(7),
+  capacity: Joi.number(),
+  location: Joi.object({
+    latitude: Joi.number().min(-90).max(90),
+    longitude: Joi.number().min(-180).max(180),
+    address: Joi.string().max(150),
+    city: Joi.string().max(80),
+  }),
+});
+
 module.exports = establishmentValidation;
