@@ -31,6 +31,13 @@ oauth.authorizationAdmin = async (req, res, next) => {
   return next();
 };
 
+oauth.authorizationClient = async (req, res, next) => {
+  const { payload } = req;
+  if (!payload.role === roles.client) return res.status(403).json({ message: 'Forbidden' });
+  req.id = payload.roleId;
+  return next();
+};
+
 oauth.authorizationCompany = async (req, res, next) => {
   const { payload } = req;
   if (!payload.role === roles.company) return res.status(403).json({ message: 'Forbidden' });
