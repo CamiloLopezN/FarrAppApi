@@ -13,10 +13,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 require(`./config/config.database`);
 
-app.use('/', require('./routes'));
-app.use('/users', require('./routes/users.routes'));
-app.use('/companies', require('./routes/companies.routes'));
-app.use('/admins', require('./routes/admins.routes'));
-app.use('/payments', require('./routes/payments.routes'));
+app.use('/api', require('./routes'));
+app.use('/api/users', require('./routes/users.routes'));
+app.use('/api/companies', require('./routes/companies.routes'));
+app.use('/api/admins', require('./routes/admins.routes'));
+app.use('/api/payments', require('./routes/payments.routes'));
+app.use('/api/clients', require('./routes/clients.routes'));
 
 module.exports = app;
