@@ -8,6 +8,12 @@ router.post('/', companiesController.signUp);
 router.get('/', authentication, companiesController.getCompanies);
 router.get('/:companyId', authentication, companiesController.profile);
 router.post('/:companyId', authentication, authorizationCompany, companiesController.updateProfile);
+router.get(
+  '/:companyId/events',
+  authentication,
+  authorizationCompany,
+  companiesController.getEventsByCompany,
+);
 router.post(
   '/:companyId/establishments',
   authentication,
@@ -44,7 +50,7 @@ router.get(
   '/:companyId/establishments/:establishmentId/events',
   authentication,
   authorizationCompany,
-  companiesController.getEvents,
+  companiesController.getEventsByEstablishment,
 );
 
 router.get(

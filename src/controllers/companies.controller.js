@@ -72,7 +72,7 @@ companyCtrl.signUp = [validation(signUpVal), signUp];
 Un admin obtiene la información de las compañias
  */
 async function getCompanies(req, res) {
-  if (!req.payload.role === roles.adminRole) return res.status(403).json({ message: 'Forbidden' });
+  if (!req.payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
 
   const projection = {
     createdAt: 0,
@@ -315,7 +315,7 @@ async function registerEvent(req, res) {
 
 companyCtrl.registerEvent = [validation(postEventVal), registerEvent];
 
-async function getEvents(req, res) {
+async function getEventsByEstablishment(req, res) {
   const { companyId, establishmentId } = req.params;
   if (!companyId || !establishmentId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
@@ -345,7 +345,7 @@ async function getEvents(req, res) {
   return res.status(200).json({ message: events });
 }
 
-companyCtrl.getEvents = [getEvents];
+companyCtrl.getEventsByEstablishment = [getEventsByEstablishment];
 
 async function getEventById(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
@@ -436,5 +436,32 @@ async function updateEvent(req, res) {
 }
 
 companyCtrl.updateEvent = [validation(updateEventVal), updateEvent];
+
+async function getEventsByCompany(req, res) {
+  const { companyId } = req.params;
+  if (!companyId)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+
+  let events;
+  try {
+    events = await Establishment.findOne(
+      {
+        'company.companyId': mongoose.Types.ObjectId(companyId),
+      },
+      { events: 1, _id: 0 },
+    ).orFail();
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `Internal server error`, err });
+  }
+
+  return res.status(200).json({ message: events });
+}
+
+companyCtrl.getEventsByCompany = [getEventsByCompany];
 
 module.exports = companyCtrl;
