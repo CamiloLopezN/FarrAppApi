@@ -1,12 +1,11 @@
 const { Schema } = require('mongoose');
-const establishmentTypeSchema = require('./establishmentType.schema');
 const locationSchema = require('./location.schema');
 const reviewSchema = require('./review.schema');
 const eventPreviewSchema = require('./eventPreview.schema');
 
 const establishmentSchema = new Schema({
   establishmentName: { type: String, required: true },
-  establishmentTypes: { type: [establishmentTypeSchema], required: true },
+  establishmentTypes: { type: [String], required: true },
   categories: { type: [String], required: true },
   description: { type: String, required: true },
   logoUrl: { type: String, required: true },
