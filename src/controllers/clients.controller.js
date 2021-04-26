@@ -1,11 +1,11 @@
 const mongoose = require('../config/config.database');
 
 const { Client, User } = require('../models/entity.model');
-const EstablishmentPreview = require('../models/schemas/establishmentPreview.schema');
 const validatorPass = require('../middlewares/validations/password.validator');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
+const { establishmentPreview } = require('../middlewares/validations/establishment.joi');
 const auth = require('../middlewares/oauth/authentication');
 
 // eslint-disable-next-line consistent-return
@@ -152,5 +152,6 @@ const followEstablishment = async (req, res) => {
 module.exports.followEstablishment = [
   auth.authentication,
   auth.authorizationClient,
+  validation(establishmentPreview),
   followEstablishment,
 ];
