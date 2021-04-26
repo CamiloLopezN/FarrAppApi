@@ -304,7 +304,11 @@ async function registerEvent(req, res) {
       imageUrl: event.photoUrls[0],
       status: event.status,
     };
-    await Establishment.updateOne({ _id: establishmentId }, { $push: { events: eventPreview } });
+    await Establishment.updateOne(
+      { _id: establishmentId },
+      { $push: { events: eventPreview } },
+    ).orFail();
+    await Company.updateOne({ _id: companyId }, { $push: { events: eventPreview } }).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
