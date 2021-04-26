@@ -7,5 +7,6 @@ router.post('/', clientController.postClient);
 router.get('/:clientId', clientController.getClientById);
 router.get('/', clientController.getClients);
 router.put('/:clientId/update', clientController.updateClientProfile);
+router.put('/follow-establishment', clientController.followEstablishment);
 
 module.exports = router;

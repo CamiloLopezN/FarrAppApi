@@ -1,6 +1,7 @@
 const mongoose = require('../config/config.database');
 
 const { Client, User } = require('../models/entity.model');
+const EstablishmentPreview = require('../models/schemas/establishmentPreview.schema');
 const validatorPass = require('../middlewares/validations/password.validator');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
@@ -134,3 +135,22 @@ const getClients = async (req, res) => {
   return res.status(200).json({ message: clients });
 };
 module.exports.getClients = [auth.authentication, getClients];
+
+const followEstablishment = async (req, res) => {
+  const clientId = req.id;
+  try {
+    await Client.updateOne({ _id: clientId }, { $push: { follows: req.body } });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `Internal server error  ${err}` });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
+};
+module.exports.followEstablishment = [
+  auth.authentication,
+  auth.authorizationClient,
+  followEstablishment,
+];
