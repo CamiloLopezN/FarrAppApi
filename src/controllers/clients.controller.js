@@ -132,15 +132,15 @@ const followEstablishment = async (req, res) => {
   try {
     await Client.updateOne({ _id: clientId }, { $push: { follows: req.body } })
       .then(() => {
-        res.status(200).json({ message: 'Succesful operation' });
+        res.status(200).json({ message: 'Successful operation' });
       })
       .catch(() => {
-        return res.status(500).json({ message: `Internal server error ` });
+        return res.status(500).json({ message: `Internal server error` });
       });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful operation' });
 };
