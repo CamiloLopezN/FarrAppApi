@@ -8,7 +8,6 @@ const { postClientVal, updateClientVal } = require('../middlewares/validations/c
 const { establishmentPreview } = require('../middlewares/validations/establishment.joi');
 const auth = require('../middlewares/oauth/authentication');
 
-// eslint-disable-next-line consistent-return
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
   try {
