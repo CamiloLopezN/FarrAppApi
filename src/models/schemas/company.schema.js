@@ -1,7 +1,5 @@
 const uniqueValidator = require('mongoose-unique-validator');
 const { Schema } = require('../../config/config.database');
-
-const eventPreviewSchema = require('./eventPreview.schema');
 const establishmentPreviewSchema = require('./establishmentPreview.schema');
 
 const companySchema = new Schema(
@@ -12,7 +10,6 @@ const companySchema = new Schema(
     contactNumber: { type: String, required: true },
     nit: { type: String, required: true, unique: true },
     establishments: [establishmentPreviewSchema],
-    events: [eventPreviewSchema],
     customerId: { type: String },
   },
   {
