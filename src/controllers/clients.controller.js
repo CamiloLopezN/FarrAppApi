@@ -158,8 +158,8 @@ module.exports.followEstablishment = [
 const interestForEvent = async (req, res) => {
   const clientId = req.id;
 
-  const event = await Event.findOne({ _id: req.body.eventId });
-  const est = await Establishment.findOne({ _id: event.establishment.establishmentId });
+  const event = await Event.findOne({ _id: req.body.eventId }).orFail();
+  const est = await Establishment.findOne({ _id: event.establishment.establishmentId }).orFail();
 
   const eventPreview = {
     // eslint-disable-next-line no-underscore-dangle
