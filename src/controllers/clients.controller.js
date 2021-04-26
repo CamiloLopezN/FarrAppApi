@@ -1,7 +1,7 @@
 const mongoose = require('../config/config.database');
 
 const { Client, User } = require('../models/entity.model');
-const validatorPass = require('../middlewares/validations/password.validator');
+const { validatePass } = require('./password.controller');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
@@ -14,48 +14,36 @@ const postClient = async (req, res) => {
   try {
     const foundClient = await User.findOne({ email });
     if (foundClient) {
-      return res.status(409).json({
-        message: 'Invalid email or Password!',
+      return res.status(200).json({
+        message: 'Succesful operation',
       });
     }
-    const validationPass = validatorPass.validate(password, { list: true });
-    // validationPass.length === 0 significa que el array con errores de validacion esta vacio, o sea, esta correcto el formato de la contraseña
-    if (validationPass.length === 0) {
-      const newUser = new User({
-        email,
-        password,
-        role: roles.client,
-        hasReqDeactivation: false,
-        isActive: false,
-        isVerified: false,
+    const newUser = new User({
+      email,
+      password,
+      role: roles.client,
+      hasReqDeactivation: false,
+      isActive: false,
+      isVerified: false,
+    });
+    newUser.password = await newUser.encryptPassword(password);
+    await newUser.save().then(async (savedUser) => {
+      const month = birthdate.split('-')[1] - 1;
+      const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
+      const client = new Client({
+        // eslint-disable-next-line no-underscore-dangle
+        userId: savedUser._id,
+        firstName,
+        lastName,
+        birthdate: myDate,
+        gender,
       });
-      newUser.password = await newUser.encryptPassword(password);
-      await newUser.save().then(async (savedUser) => {
-        const month = birthdate.split('-')[1] - 1;
-        const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
-        const client = new Client({
-          // eslint-disable-next-line no-underscore-dangle
-          userId: savedUser._id,
-          firstName,
-          lastName,
-          birthdate: myDate,
-          gender,
-        });
-        await client
-          .save()
-          .then(() => {
-            return res.status(200).json({ message: 'Successful registration' });
-          })
-          .catch(async (err) => {
-            if (err instanceof mongoose.Error.ValidationError) {
-              // eslint-disable-next-line no-underscore-dangle
-              await User.remove({ _id: savedUser._id });
-              return res.status(400).json({ message: err });
-            }
-            return res.status(400).json({ message: err });
-          });
+      await client.save((err) => {
+        if (err) {
+          res.status(400).json({ message: 'Bad Request' });
+        }
       });
-    }
+    });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError)
       return res
@@ -63,8 +51,11 @@ const postClient = async (req, res) => {
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
+  return res.status(200).json({
+    message: 'Succesful operation',
+  });
 };
-module.exports.postClient = [validation(postClientVal), postClient];
+module.exports.postClient = [validatePass, validation(postClientVal), postClient];
 
 const updateClientProfile = async (req, res) => {
   const { clientId } = req.params;

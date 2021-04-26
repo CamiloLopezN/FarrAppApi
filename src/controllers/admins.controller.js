@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const validation = require('../middlewares/validations/validation');
 const { postAdminVal, updateAdmin } = require('../middlewares/validations/admin.joi');
-const validatorPass = require('../middlewares/validations/password.validator');
+const { validatePass } = require('./password.controller');
 const { Admin, User } = require('../models/entity.model');
 const roles = require('../middlewares/oauth/roles');
 const auth = require('../middlewares/oauth/authentication');
@@ -16,24 +16,24 @@ const postAdmin = async (req, res) => {
       return res.status(409).json({
         message: 'Invalid email or Password!',
       });
-    const validationPass = validatorPass.validate(password, { list: true });
-    if (validationPass.length === 0) {
-      const newUser = new User({
-        email,
-        password,
-        role: roles.admin,
-        hasReqDeactivation: false,
-        isActive: true,
-        isVerified: true,
-      });
-      newUser.password = await newUser.encryptPassword(password);
-      const savedUser = await newUser.save();
+    const newUser = new User({
+      email,
+      password,
+      role: roles.admin,
+      hasReqDeactivation: false,
+      isActive: true,
+      isVerified: true,
+    });
+    newUser.password = await newUser.encryptPassword(password);
+    const savedUser = await newUser.save();
 
-      // eslint-disable-next-line no-underscore-dangle
-      const admin = new Admin({ userId: savedUser._id, firstName, lastName });
-      await admin.save();
-      return res.status(200).json({ message: 'Registro exitoso' });
-    }
+    // eslint-disable-next-line no-underscore-dangle
+    const admin = new Admin({ userId: savedUser._id, firstName, lastName });
+    await admin.save((err) => {
+      if (err) {
+        res.status(400).json({ message: 'Bad Request' });
+      }
+    });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError)
       return res
@@ -41,11 +41,13 @@ const postAdmin = async (req, res) => {
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
+  return res.status(200).json({ message: 'Registro exitoso' });
 };
 module.exports.postAdmin = [
   auth.authentication,
   auth.authorizationAdmin,
   validation(postAdminVal),
+  validatePass,
   postAdmin,
 ];
 
