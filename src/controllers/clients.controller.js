@@ -1,11 +1,11 @@
 const mongoose = require('../config/config.database');
 
-const { Client, User } = require('../models/entity.model');
+const { Client, User, Establishment } = require('../models/entity.model');
 const { validatePass } = require('./password.controller');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
-const { establishmentPreview } = require('../middlewares/validations/establishment.joi');
+const { establishmentId } = require('../middlewares/validations/establishment.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
 
@@ -124,15 +124,23 @@ module.exports.getClients = [auth.authentication, getClients];
 
 const followEstablishment = async (req, res) => {
   const clientId = req.id;
+
+  const establish = await Establishment.findOne({ _id: req.body.establishmentId });
+
+  const estPreview = {
+    // eslint-disable-next-line no-underscore-dangle
+    establishmentId: establish._id,
+    companyId: establish.company.companyId,
+    establishmentName: establish.establishmentName,
+    location: establish.location,
+    imageUrl: establish.photoUrls[0],
+    isActive: establish.isActive,
+  };
   try {
-    await Client.updateOne({ _id: clientId }, { $push: { follows: req.body } })
-      .then(() => {
-        res.status(200).json({ message: 'Successful operation' });
-      })
-      .catch(() => {
-        return res.status(500).json({ message: 'Internal server error' });
-      });
+    await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
   } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     return res.status(500).json({ message: 'Internal server error' });
@@ -142,6 +150,6 @@ const followEstablishment = async (req, res) => {
 module.exports.followEstablishment = [
   auth.authentication,
   auth.authorizationClient,
-  validation(establishmentPreview),
+  validation(establishmentId),
   followEstablishment,
 ];
