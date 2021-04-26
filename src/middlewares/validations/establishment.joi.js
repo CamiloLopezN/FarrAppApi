@@ -4,14 +4,7 @@ const establishmentValidation = {};
 
 establishmentValidation.postEstablishmentVal = Joi.object({
   establishmentName: Joi.string().max(150).required(),
-  establishmentTypes: Joi.array()
-    .items(
-      Joi.object({
-        establishmentTypeName: Joi.string().max(50).required(),
-        description: Joi.string().max(150).required(),
-      }),
-    )
-    .required(),
+  establishmentTypes: Joi.array().items(Joi.string()).max(20).required(),
   categories: Joi.array().items(Joi.string()).max(50).required(),
   description: Joi.string().max(1024).required(),
   logoUrl: Joi.string().max(150).required(),

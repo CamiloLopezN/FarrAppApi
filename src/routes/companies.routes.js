@@ -23,7 +23,7 @@ router.post(
 router.get(
   '/:companyId/establishments',
   authentication,
-  companiesController.previewEstablishmentsOfCompany,
+  companiesController.getPreviewEstablishmentsOfCompany,
 );
 router.get(
   '/:companyId/establishments/:establishmentId',
