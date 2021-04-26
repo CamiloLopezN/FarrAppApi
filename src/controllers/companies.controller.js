@@ -411,6 +411,30 @@ async function updateEvent(req, res) {
 
     const updated = await Event.findOneAndUpdate({ _id: eventId }, data);
     if (!updated) return res.status(404).json({ message: 'Resource not found' });
+
+    const eventUpdated = await Event.findOne(
+      { _id: eventId },
+      { _id: 1, eventName: 1, 'location.city': 1, start: 1, end: 1, photoUrls: 1, status: 1 },
+    );
+
+    const eventPreview = {
+      // eslint-disable-next-line no-underscore-dangle
+      eventId: eventUpdated._id,
+      eventName: eventUpdated.eventName,
+      city: eventUpdated.location.city,
+      start: eventUpdated.start,
+      end: eventUpdated.end,
+      imageUrl: eventUpdated.photoUrls[0],
+      status: eventUpdated.status,
+    };
+    await Establishment.updateOne(
+      { _id: establishmentId, 'events.eventId': eventPreview.eventId },
+      { $set: { 'events.$': eventPreview } },
+    ).orFail();
+    await Company.updateOne(
+      { _id: companyId, 'events.eventId': eventPreview.eventId },
+      { $set: { 'events.$': eventPreview } },
+    ).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
@@ -419,25 +443,6 @@ async function updateEvent(req, res) {
     return res.status(500).json({ message: `Internal server error`, err });
   }
 
-  const eventUpdated = await Event.findOne(
-    { _id: eventId },
-    { _id: 1, eventName: 1, 'location.city': 1, start: 1, end: 1, photoUrls: 1, status: 1 },
-  );
-
-  const eventPreview = {
-    // eslint-disable-next-line no-underscore-dangle
-    eventId: eventUpdated._id,
-    eventName: eventUpdated.eventName,
-    city: eventUpdated.location.city,
-    start: eventUpdated.start,
-    end: eventUpdated.end,
-    imageUrl: eventUpdated.photoUrls[0],
-    status: eventUpdated.status,
-  };
-  await Establishment.updateOne(
-    { _id: establishmentId, 'events.eventId': eventPreview.eventId },
-    { $set: { 'events.$': eventPreview } },
-  );
   return res.status(200).json({ message: 'Update complete' });
 }
 
