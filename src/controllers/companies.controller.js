@@ -444,7 +444,6 @@ async function updateEvent(req, res) {
 
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Resource not found' });
-    console.log(err);
     return res.status(500).json({ message: `Internal server error`, err });
   }
 
