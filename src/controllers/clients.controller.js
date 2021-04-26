@@ -47,7 +47,7 @@ const postClient = async (req, res) => {
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({
     message: 'Successful operation',
@@ -71,7 +71,7 @@ const updateClientProfile = async (req, res) => {
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: 'Successful update' });
 };
@@ -92,7 +92,7 @@ const getClientById = async (req, res) => {
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 module.exports.getClientById = [auth.authentication, getClientById];
@@ -113,7 +113,7 @@ const getClients = async (req, res) => {
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: clients });
 };
@@ -127,12 +127,12 @@ const followEstablishment = async (req, res) => {
         res.status(200).json({ message: 'Successful operation' });
       })
       .catch(() => {
-        return res.status(500).json({ message: `Internal server error` });
+        return res.status(500).json({ message: 'Internal server error' });
       });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: 'Successful operation' });
 };
