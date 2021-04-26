@@ -139,13 +139,19 @@ module.exports.getClients = [auth.authentication, getClients];
 const followEstablishment = async (req, res) => {
   const clientId = req.id;
   try {
-    await Client.updateOne({ _id: clientId }, { $push: { follows: req.body } });
+    await Client.updateOne({ _id: clientId }, { $push: { follows: req.body } })
+      .then(() => {
+        res.status(200).json({ message: 'Succesful operation' });
+      })
+      .catch(() => {
+        return res.status(500).json({ message: `Internal server error ` });
+      });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error ` });
   }
   return res.status(200).json({ message: 'Successful operation' });
 };
