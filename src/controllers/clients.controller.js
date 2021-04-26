@@ -1,67 +1,62 @@
 const mongoose = require('../config/config.database');
 
 const { Client, User } = require('../models/entity.model');
-const validatorPass = require('../middlewares/validations/password.validator');
+const { validatePass } = require('./password.controller');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
+const { establishmentPreview } = require('../middlewares/validations/establishment.joi');
 const auth = require('../middlewares/oauth/authentication');
+const { generatePasswordRand } = require('../utilities/generatePass');
 
-// eslint-disable-next-line consistent-return
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
+  const user = new User({
+    email,
+    password,
+    role: roles.client,
+    hasReqDeactivation: false,
+    isActive: false,
+    isVerified: false,
+  });
+  user.password = await user.encryptPassword(password || generatePasswordRand(8, 'alf'));
+
+  const month = birthdate.split('-')[1] - 1;
+  const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
+  const client = new Client({
+    // eslint-disable-next-line no-underscore-dangle
+    userId: user._id,
+    firstName,
+    lastName,
+    birthdate: myDate,
+    gender,
+  });
+
   try {
     const foundClient = await User.findOne({ email });
     if (foundClient) {
-      return res.status(409).json({
-        message: 'Invalid email or Password!',
+      // TODO resend verification mail
+      return res.status(200).json({
+        message: 'Successful operation!',
       });
     }
-    const validationPass = validatorPass.validate(password, { list: true });
-    // validationPass.length === 0 significa que el array con errores de validacion esta vacio, o sea, esta correcto el formato de la contraseña
-    if (validationPass.length === 0) {
-      const newUser = new User({
-        email,
-        password,
-        role: roles.client,
-        hasReqDeactivation: false,
-        isActive: false,
-        isVerified: false,
-      });
-      newUser.password = await newUser.encryptPassword(password);
-      await newUser.save().then(async (savedUser) => {
-        const month = birthdate.split('-')[1] - 1;
-        const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
-        const client = new Client({
-          // eslint-disable-next-line no-underscore-dangle
-          userId: savedUser._id,
-          firstName,
-          lastName,
-          birthdate: myDate,
-          gender,
-        });
-        await client
-          .save()
-          .then(() => {
-            return res.status(200).json({ message: 'Successful registration' });
-          })
-          .catch(async (err) => {
-            if (err instanceof mongoose.Error.ValidationError) {
-              // eslint-disable-next-line no-underscore-dangle
-              await User.remove({ _id: savedUser._id });
-              return res.status(400).json({ message: err });
-            }
-            return res.status(400).json({ message: err });
-          });
-      });
-    }
+
+    await client.save();
+    await user.save();
   } catch (error) {
+    // eslint-disable-next-line no-underscore-dangle
+    await User.deleteOne({ _id: user._id });
+    // eslint-disable-next-line no-underscore-dangle
+    await Client.deleteOne({ _id: client._id });
     if (error instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
+  return res.status(201).json({
+    message: 'Successful operation',
+  });
 };
-module.exports.postClient = [validation(postClientVal), postClient];
+module.exports.postClient = [validation(postClientVal), validatePass, postClient];
 
 const updateClientProfile = async (req, res) => {
   const { clientId } = req.params;
@@ -79,7 +74,7 @@ const updateClientProfile = async (req, res) => {
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: 'Successful update' });
 };
@@ -100,7 +95,7 @@ const getClientById = async (req, res) => {
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 module.exports.getClientById = [auth.authentication, getClientById];
@@ -108,7 +103,7 @@ module.exports.getClientById = [auth.authentication, getClientById];
 const getClients = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
   const page = parseInt(req.query.page, 10) || 1;
-  if (!req.payload.role === roles.adminRole) return res.status(403).json({ message: 'Forbidden' });
+  if (!req.payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
   const projection = {
     createdAt: 0,
     updatedAt: 0,
@@ -121,8 +116,32 @@ const getClients = async (req, res) => {
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: `Internal server error ` });
+    return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: clients });
 };
 module.exports.getClients = [auth.authentication, getClients];
+
+const followEstablishment = async (req, res) => {
+  const clientId = req.id;
+  try {
+    await Client.updateOne({ _id: clientId }, { $push: { follows: req.body } })
+      .then(() => {
+        res.status(200).json({ message: 'Successful operation' });
+      })
+      .catch(() => {
+        return res.status(500).json({ message: 'Internal server error' });
+      });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
+};
+module.exports.followEstablishment = [
+  auth.authentication,
+  auth.authorizationClient,
+  validation(establishmentPreview),
+  followEstablishment,
+];

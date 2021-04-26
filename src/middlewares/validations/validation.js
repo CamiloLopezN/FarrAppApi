@@ -5,7 +5,7 @@ module.exports = (schema) => {
       next();
     } catch (error) {
       res.status(400).json({
-        message: error,
+        message: 'Incomplete or bad formatted client data',
       });
     }
   };

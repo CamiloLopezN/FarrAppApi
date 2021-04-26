@@ -18,6 +18,15 @@ establishmentValidation.postEstablishmentVal = Joi.object({
   }).required(),
 });
 
+establishmentValidation.establishmentPreview = Joi.object({
+  establishmentId: Joi.string().max(30).required(),
+  establishmentName: Joi.string().max(150).required(),
+  city: Joi.string().max(80).required(),
+  address: Joi.string().max(150).required(),
+  imageUrl: Joi.string().required(),
+  isActive: Joi.boolean().required(),
+});
+
 establishmentValidation.updateEstablishmentVal = Joi.object({
   establishmentName: Joi.string().max(150),
   establishmentTypes: Joi.array().items(
