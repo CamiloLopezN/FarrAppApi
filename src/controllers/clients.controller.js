@@ -100,7 +100,7 @@ module.exports.getClientById = [auth.authentication, getClientById];
 const getClients = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
   const page = parseInt(req.query.page, 10) || 1;
-  if (!req.payload.role === roles.adminRole) return res.status(403).json({ message: 'Forbidden' });
+  if (!req.payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
   const projection = {
     createdAt: 0,
     updatedAt: 0,
