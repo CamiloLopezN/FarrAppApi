@@ -1,11 +1,12 @@
 const mongoose = require('../config/config.database');
 
-const { Client, User, Establishment } = require('../models/entity.model');
+const { Client, User, Establishment, Event } = require('../models/entity.model');
 const { validatePass } = require('./password.controller');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
 const { establishmentId } = require('../middlewares/validations/establishment.joi');
+const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
 
@@ -152,4 +153,41 @@ module.exports.followEstablishment = [
   auth.authorizationClient,
   validation(establishmentId),
   followEstablishment,
+];
+
+const interestForEvent = async (req, res) => {
+  const clientId = req.id;
+
+  const event = await Event.findOne({ _id: req.body.eventId });
+  const est = await Establishment.findOne({ _id: event.establishment.establishmentId });
+
+  const eventPreview = {
+    // eslint-disable-next-line no-underscore-dangle
+    eventId: event._id,
+    establishmentId: event.establishment.establishmentId,
+    companyId: est.company.companyId,
+    eventName: event.eventName,
+    city: event.location.city,
+    start: event.start,
+    end: event.end,
+    imageUrl: event.photoUrls[0],
+    status: event.status,
+  };
+  try {
+    await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
+  } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Not found resource' });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
+};
+
+module.exports.interestForEvent = [
+  auth.authentication,
+  auth.authorizationClient,
+  validation(eventId),
+  interestForEvent,
 ];
