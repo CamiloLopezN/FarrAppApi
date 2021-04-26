@@ -15,7 +15,7 @@ const postClient = async (req, res) => {
     const foundClient = await User.findOne({ email });
     if (foundClient) {
       return res.status(200).json({
-        message: 'Succesful operation',
+        message: 'Successful operation',
       });
     }
     const newUser = new User({
@@ -49,10 +49,10 @@ const postClient = async (req, res) => {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
-    return res.status(500).json({ message: `internal server error  ${error}` });
+    return res.status(500).json({ message: `Internal server error  ${error}` });
   }
   return res.status(200).json({
-    message: 'Succesful operation',
+    message: 'Successful operation',
   });
 };
 module.exports.postClient = [validatePass, validation(postClientVal), postClient];
