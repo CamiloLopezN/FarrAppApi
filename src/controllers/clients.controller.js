@@ -7,62 +7,56 @@ const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
 const { establishmentPreview } = require('../middlewares/validations/establishment.joi');
 const auth = require('../middlewares/oauth/authentication');
+const { generatePasswordRand } = require('../utilities/generatePass');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
+  const user = new User({
+    email,
+    password,
+    role: roles.client,
+    hasReqDeactivation: false,
+    isActive: false,
+    isVerified: false,
+  });
+  user.password = await user.encryptPassword(password || generatePasswordRand(8, 'alf'));
+
+  const month = birthdate.split('-')[1] - 1;
+  const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
+  const client = new Client({
+    // eslint-disable-next-line no-underscore-dangle
+    userId: user._id,
+    firstName,
+    lastName,
+    birthdate: myDate,
+    gender,
+  });
+
   try {
     const foundClient = await User.findOne({ email });
     if (foundClient) {
+      // TODO resend verification mail
       return res.status(200).json({
         message: 'Successful operation!',
       });
     }
-    const newUser = new User({
-      email,
-      password,
-      role: roles.client,
-      hasReqDeactivation: false,
-      isActive: false,
-      isVerified: false,
-    });
-    newUser.password = await newUser.encryptPassword(password);
-    newUser.save().then(async (savedUser) => {
-      const month = birthdate.split('-')[1] - 1;
-      const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
-      const client = new Client({
-        // eslint-disable-next-line no-underscore-dangle
-        userId: savedUser._id,
-        firstName,
-        lastName,
-        birthdate: myDate,
-        gender,
-      });
-      await client
-        .save()
-        .then(() => {
-          return res.status(200).json({
-            message: 'Successful operation',
-          });
-        })
-        .catch(async (err) => {
-          if (err instanceof mongoose.Error.ValidationError) {
-            // eslint-disable-next-line no-underscore-dangle
-            await User.remove({ _id: savedUser._id });
-            return res.status(400).json({ message: 'bad request' });
-          }
-          return res.status(400).json({ message: 'bad request' });
-        });
-    });
+
+    await client.save();
+    await user.save();
   } catch (error) {
+    // eslint-disable-next-line no-underscore-dangle
+    await User.deleteOne({ _id: user._id });
+    // eslint-disable-next-line no-underscore-dangle
+    await Client.deleteOne({ _id: client._id });
     if (error instanceof mongoose.Error.ValidationError)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     return res.status(500).json({ message: 'Internal server error' });
   }
-  return res.status(200).json({
+  return res.status(201).json({
     message: 'Successful operation',
   });
 };
-module.exports.postClient = [validatePass, validation(postClientVal), postClient];
+module.exports.postClient = [validation(postClientVal), validatePass, postClient];
 
 const updateClientProfile = async (req, res) => {
   const { clientId } = req.params;
