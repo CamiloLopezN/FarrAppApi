@@ -148,9 +148,7 @@ const followEstablishment = async (req, res) => {
       });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
-      return res
-        .status(400)
-        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     return res.status(500).json({ message: `Internal server error ` });
   }
   return res.status(200).json({ message: 'Successful operation' });
