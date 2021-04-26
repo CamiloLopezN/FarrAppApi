@@ -14,7 +14,7 @@ const eventTicketSchema = new Schema({
   isTransferable: { type: Boolean, required: true },
   maxPerPurchase: { type: Number, required: true },
   minPerPurchase: { type: Number, required: true },
-  otherInfo: { type: String, required: true },
+  otherInfo: { type: String },
   promotionalCodes: [promotionalCodeSchema],
 });
 
