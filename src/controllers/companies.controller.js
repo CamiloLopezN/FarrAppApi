@@ -185,7 +185,7 @@ async function registerEstablishment(req, res) {
 
 companyCtrl.registerEstablishment = [validation(postEstablishmentVal), registerEstablishment];
 
-async function establishmentsOfCompany(req, res) {
+async function previewEstablishmentsOfCompany(req, res) {
   const { companyId } = req.params;
   const id = authorizationAdminOrCompany(req, res, companyId);
   let establishments;
@@ -203,7 +203,7 @@ async function establishmentsOfCompany(req, res) {
   return res.status(200).json({ message: establishments });
 }
 
-companyCtrl.establishmentsOfCompany = [establishmentsOfCompany];
+companyCtrl.previewEstablishmentsOfCompany = [previewEstablishmentsOfCompany];
 
 async function getEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
