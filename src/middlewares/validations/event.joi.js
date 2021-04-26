@@ -93,4 +93,8 @@ eventsValidations.updateEventVal = Joi.object({
   ),
 });
 
+eventsValidations.eventId = Joi.object({
+  eventId: Joi.string().max(30),
+});
+
 module.exports = eventsValidations;
