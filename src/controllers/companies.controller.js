@@ -165,9 +165,9 @@ async function registerEstablishment(req, res) {
     const reviewEstablishment = {
       // eslint-disable-next-line no-underscore-dangle
       establishmentId: establishmentSaved._id,
+      companyId,
       establishmentName: establishmentSaved.establishmentName,
-      city: establishmentSaved.location.city,
-      address: establishmentSaved.location.address,
+      location: establishmentSaved.location,
       imageUrl: establishmentSaved.photoUrls[0],
       isActive: establishmentSaved.isActive,
     };
@@ -185,7 +185,7 @@ async function registerEstablishment(req, res) {
 
 companyCtrl.registerEstablishment = [validation(postEstablishmentVal), registerEstablishment];
 
-async function previewEstablishmentsOfCompany(req, res) {
+async function getPreviewEstablishmentsOfCompany(req, res) {
   const { companyId } = req.params;
   const id = authorizationAdminOrCompany(req, res, companyId);
   let establishments;
@@ -203,7 +203,7 @@ async function previewEstablishmentsOfCompany(req, res) {
   return res.status(200).json({ message: establishments });
 }
 
-companyCtrl.previewEstablishmentsOfCompany = [previewEstablishmentsOfCompany];
+companyCtrl.getPreviewEstablishmentsOfCompany = [getPreviewEstablishmentsOfCompany];
 
 async function getEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -295,6 +295,8 @@ async function registerEvent(req, res) {
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
       eventId: eventSaved._id,
+      establishmentId,
+      companyId,
       eventName: event.eventName,
       city: event.location.city,
       start: event.start,
