@@ -247,7 +247,7 @@ async function updateEstablishmentById(req, res) {
       // eslint-disable-next-line no-underscore-dangle
       establishmentId: establishmentUpdated._id,
       establishmentName: establishmentUpdated.establishmentName,
-      city: establishmentUpdated.location.city,
+      location: establishmentUpdated.location,
       address: establishmentUpdated.location.address,
       imageUrl: establishmentUpdated.photoUrls[0],
       isActive: establishmentUpdated.isActive,
@@ -409,17 +409,18 @@ async function updateEvent(req, res) {
       $set: body,
     };
 
-    const updated = await Event.findOneAndUpdate({ _id: eventId }, data);
-    if (!updated) return res.status(404).json({ message: 'Resource not found' });
+    await Event.findOneAndUpdate({ _id: eventId }, data).orFail();
 
     const eventUpdated = await Event.findOne(
       { _id: eventId },
       { _id: 1, eventName: 1, 'location.city': 1, start: 1, end: 1, photoUrls: 1, status: 1 },
-    );
+    ).orFail();
 
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
       eventId: eventUpdated._id,
+      establishmentId,
+      companyId,
       eventName: eventUpdated.eventName,
       city: eventUpdated.location.city,
       start: eventUpdated.start,
@@ -440,6 +441,10 @@ async function updateEvent(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+    console.log(err);
     return res.status(500).json({ message: `Internal server error`, err });
   }
 
