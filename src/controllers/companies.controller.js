@@ -89,7 +89,7 @@ async function getCompanies(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: companies });
 }
@@ -112,7 +112,7 @@ async function getCompanyById(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
 }
 
@@ -139,7 +139,7 @@ async function updateProfile(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
 
   return res.status(200).json({ message: 'Successful update' });
@@ -178,7 +178,7 @@ async function registerEstablishment(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful registration' });
 }
@@ -198,7 +198,7 @@ async function getPreviewEstablishmentsOfCompany(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: establishments });
 }
@@ -219,7 +219,7 @@ async function getEstablishmentById(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error  ${err}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
 
   return res.status(200).json({ message: establishment });
@@ -238,8 +238,7 @@ async function updateEstablishmentById(req, res) {
   };
 
   try {
-    const updated = await Establishment.findOneAndUpdate({ _id: establishmentId }, data);
-    if (!updated) return res.status(404).json({ message: 'Resource not found' });
+    const updated = await Establishment.findOneAndUpdate({ _id: establishmentId }, data).orFail();
 
     const establishmentUpdated = await Establishment.findOne({ _id: establishmentId }).orFail();
 
@@ -247,7 +246,7 @@ async function updateEstablishmentById(req, res) {
       // eslint-disable-next-line no-underscore-dangle
       establishmentId: establishmentUpdated._id,
       establishmentName: establishmentUpdated.establishmentName,
-      city: establishmentUpdated.location.city,
+      location: establishmentUpdated.location,
       address: establishmentUpdated.location.address,
       imageUrl: establishmentUpdated.photoUrls[0],
       isActive: establishmentUpdated.isActive,
@@ -257,13 +256,15 @@ async function updateEstablishmentById(req, res) {
       // eslint-disable-next-line no-underscore-dangle
       { _id: companyId, 'establishments.establishmentId': updated._id },
       { $set: { 'establishments.$': establishmentPreview } },
-    );
+    ).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error`, err });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+    return res.status(500).json({ message: `Internal server error` });
   }
 
   return res.status(200).json({ message: 'Update complete' });
@@ -314,7 +315,7 @@ async function registerEvent(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error`, err });
+    return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful registration' });
 }
@@ -346,7 +347,7 @@ async function getEventsByEstablishment(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error`, err });
+    return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: events });
 }
@@ -377,7 +378,7 @@ async function getEventById(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error`, err });
+    return res.status(500).json({ message: `Internal server error` });
   }
 
   return res.status(200).json({ message: event });
@@ -409,17 +410,18 @@ async function updateEvent(req, res) {
       $set: body,
     };
 
-    const updated = await Event.findOneAndUpdate({ _id: eventId }, data);
-    if (!updated) return res.status(404).json({ message: 'Resource not found' });
+    await Event.findOneAndUpdate({ _id: eventId }, data).orFail();
 
     const eventUpdated = await Event.findOne(
       { _id: eventId },
       { _id: 1, eventName: 1, 'location.city': 1, start: 1, end: 1, photoUrls: 1, status: 1 },
-    );
+    ).orFail();
 
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
       eventId: eventUpdated._id,
+      establishmentId,
+      companyId,
       eventName: eventUpdated.eventName,
       city: eventUpdated.location.city,
       start: eventUpdated.start,
@@ -440,7 +442,10 @@ async function updateEvent(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error`, err });
+
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+    return res.status(500).json({ message: `Internal server error` });
   }
 
   return res.status(200).json({ message: 'Update complete' });
@@ -467,7 +472,7 @@ async function getEventsByCompany(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error`, err });
+    return res.status(500).json({ message: `Internal server error` });
   }
 
   return res.status(200).json({ message: events });
