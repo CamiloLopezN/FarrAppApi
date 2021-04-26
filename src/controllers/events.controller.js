@@ -19,6 +19,8 @@ module.exports.getAllEvents = async (req, res) => {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
     return res.status(500).json({ message: `Internal server error`, err });
   }
 
