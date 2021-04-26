@@ -22,6 +22,7 @@ const eventSchema = new Schema({
   photoUrls: { type: [String], required: true },
   categories: { type: [String], required: true },
   dressCodes: { type: [String], required: true },
+  averageRating: { type: Number },
   tickets: { type: [eventTicketSchema], required: true },
   reviews: [reviewSchema],
 });
