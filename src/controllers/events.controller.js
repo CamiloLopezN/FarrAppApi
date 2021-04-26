@@ -13,7 +13,7 @@ module.exports.getAllEvents = async (req, res) => {
     status: 1,
   };
   try {
-    events = await Event.find({}, projection).orFail();
+    events = await Event.find({ status: 'Activo' }, projection).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
