@@ -14,7 +14,7 @@ const postClient = async (req, res) => {
     const foundClient = await User.findOne({ email });
     if (foundClient) {
       return res.status(200).json({
-        message: 'Successful operation',
+        message: 'Successful operation!',
       });
     }
     const newUser = new User({
@@ -26,7 +26,7 @@ const postClient = async (req, res) => {
       isVerified: false,
     });
     newUser.password = await newUser.encryptPassword(password);
-    await newUser.save().then(async (savedUser) => {
+    newUser.save().then(async (savedUser) => {
       const month = birthdate.split('-')[1] - 1;
       const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
       const client = new Client({
@@ -37,11 +37,21 @@ const postClient = async (req, res) => {
         birthdate: myDate,
         gender,
       });
-      await client.save((err) => {
-        if (err) {
-          res.status(400).json({ message: 'Bad Request' });
-        }
-      });
+      await client
+        .save()
+        .then(() => {
+          return res.status(200).json({
+            message: 'Successful operation',
+          });
+        })
+        .catch(async (err) => {
+          if (err instanceof mongoose.Error.ValidationError) {
+            // eslint-disable-next-line no-underscore-dangle
+            await User.remove({ _id: savedUser._id });
+            return res.status(400).json({ message: 'bad request' });
+          }
+          return res.status(400).json({ message: 'bad request' });
+        });
     });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError)
