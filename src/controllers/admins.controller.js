@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('../config/config.database');
 
 const validation = require('../middlewares/validations/validation');
 const { postAdminVal, updateAdmin } = require('../middlewares/validations/admin.joi');

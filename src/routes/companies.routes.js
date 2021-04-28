@@ -2,7 +2,12 @@ const { Router } = require('express');
 
 const router = Router();
 const companiesController = require('../controllers/companies.controller');
-const { authentication, authorizationCompany } = require('../middlewares/oauth/authentication');
+const establishmentsController = require('../controllers/establishments.controller');
+const {
+  authentication,
+  authorizationCompany,
+  authorizationClient,
+} = require('../middlewares/oauth/authentication');
 
 router.post('/', companiesController.signUp);
 router.get('/', authentication, companiesController.getCompanies);
@@ -65,6 +70,13 @@ router.post(
   authentication,
   authorizationCompany,
   companiesController.updateEvent,
+);
+
+router.post(
+  '/establishments/:establishmentId/review',
+  authentication,
+  authorizationClient,
+  establishmentsController.postReviewEstablishment,
 );
 
 module.exports = router;
