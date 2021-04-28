@@ -278,27 +278,22 @@ async function deleteEstablishmentById(req, res) {
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
 
   try {
+    const events = await Event.find({
+      'establishment.establishmentId': { $eq: mongoose.Types.ObjectId(establishmentId) },
+    });
+
+    if (events.length > 0) {
+      await Event.deleteMany({
+        'establishment.establishmentId': { $eq: mongoose.Types.ObjectId(establishmentId) },
+      }).orFail();
+    }
+
     await Establishment.deleteOne({
       $and: [
         { _id: { $eq: establishmentId } },
         { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
       ],
     }).orFail();
-
-    await Event.deleteMany({
-      'establishment.establishmentId': { $eq: mongoose.Types.ObjectId(establishmentId) },
-    });
-
-    await Company.updateMany(
-      {
-        _id: companyId,
-      },
-      {
-        $pull: {
-          events: { establishmentId: { $eq: mongoose.Types.ObjectId(establishmentId) } },
-        },
-      },
-    );
 
     await Company.updateMany(
       {
@@ -307,6 +302,17 @@ async function deleteEstablishmentById(req, res) {
       {
         $pull: {
           establishments: { establishmentId: { $eq: mongoose.Types.ObjectId(establishmentId) } },
+        },
+      },
+    ).orFail();
+
+    await Company.updateMany(
+      {
+        _id: companyId,
+      },
+      {
+        $pull: {
+          events: { establishmentId: { $eq: mongoose.Types.ObjectId(establishmentId) } },
         },
       },
     );
