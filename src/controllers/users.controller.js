@@ -28,7 +28,7 @@ module.exports.login = async (req, res) => {
       const company = await Company.findOne({ userId: user._id }, { _id: 1, companyName: 1 });
       // eslint-disable-next-line no-underscore-dangle
       roleId = company._id;
-      userInfo.firtName = company.companyName;
+      userInfo.firstName = company.companyName;
     } else if (user.role === roles.admin) {
       // eslint-disable-next-line no-underscore-dangle
       const admin = await Admin.findOne(
