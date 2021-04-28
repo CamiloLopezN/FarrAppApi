@@ -512,6 +512,66 @@ async function updateEvent(req, res) {
   return res.status(200).json({ message: 'Update complete' });
 }
 
+async function deleteEventById(req, res) {
+  const { companyId, establishmentId, eventId } = req.params;
+  if (!companyId || !establishmentId || !eventId)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+
+  try {
+    const establishment = await Establishment.findOne({
+      $and: [
+        { _id: { $eq: establishmentId } },
+        { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
+        { 'events.eventId': { $in: [eventId] } },
+      ],
+    });
+
+    if (!establishment)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+    await Event.deleteOne({ _id: eventId }).orFail();
+
+    await Company.updateMany(
+      {
+        _id: companyId,
+      },
+      {
+        $pull: {
+          events: { eventId: { $eq: mongoose.Types.ObjectId(eventId) } },
+        },
+      },
+    ).orFail();
+
+    await Establishment.updateMany(
+      {
+        $and: [
+          { _id: { $eq: establishmentId } },
+          { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
+        ],
+      },
+      {
+        $pull: {
+          events: { eventId: { $eq: mongoose.Types.ObjectId(eventId) } },
+        },
+      },
+    ).orFail();
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+    return res.status(500).json({ message: `Internal server error` });
+  }
+
+  return res.status(200).json({ message: 'Deleted event' });
+}
+
+companyCtrl.deleteEventById = [deleteEventById];
+
 companyCtrl.updateEvent = [validation(updateEventVal), updateEvent];
 
 async function getEventsByCompany(req, res) {
