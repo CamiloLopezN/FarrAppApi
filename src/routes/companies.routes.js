@@ -39,6 +39,13 @@ router.post(
   companiesController.updateEstablishmentById,
 );
 
+router.delete(
+  '/:companyId/establishments/:establishmentId',
+  authentication,
+  authorizationCompany,
+  companiesController.deleteEstablishmentById,
+);
+
 router.post(
   '/:companyId/establishments/:establishmentId/events',
   authentication,
