@@ -272,6 +272,61 @@ async function updateEstablishmentById(req, res) {
 
 companyCtrl.updateEstablishmentById = [validation(updateEstablishmentVal), updateEstablishmentById];
 
+async function deleteEstablishmentById(req, res) {
+  const { companyId, establishmentId } = req.params;
+  if (companyId !== req.id)
+    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+  try {
+    await Establishment.deleteOne({
+      $and: [
+        { _id: { $eq: establishmentId } },
+        { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
+      ],
+    }).orFail();
+
+    await Event.deleteMany({
+      'establishment.establishmentId': { $eq: mongoose.Types.ObjectId(establishmentId) },
+    });
+
+    await Company.updateMany(
+      {
+        _id: companyId,
+      },
+      {
+        $pull: {
+          events: { establishmentId: { $eq: mongoose.Types.ObjectId(establishmentId) } },
+        },
+      },
+    );
+
+    await Company.updateMany(
+      {
+        _id: companyId,
+      },
+      {
+        $pull: {
+          establishments: { establishmentId: { $eq: mongoose.Types.ObjectId(establishmentId) } },
+        },
+      },
+    );
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+
+    return res.status(500).json({ message: `Internal server error`, err });
+  }
+
+  return res.status(200).json({ message: 'Deleted establishment' });
+}
+
+companyCtrl.deleteEstablishmentById = [deleteEstablishmentById];
+
 async function registerEvent(req, res) {
   const { companyId, establishmentId } = req.params;
   if (!companyId || !establishmentId)
