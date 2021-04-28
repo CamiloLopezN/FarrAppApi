@@ -67,6 +67,13 @@ router.get(
   companiesController.getEventbyId,
 );
 
+router.delete(
+  '/:companyId/establishments/:establishmentId/events/:eventId',
+  authentication,
+  authorizationCompany,
+  companiesController.deleteEventById,
+);
+
 router.post(
   '/:companyId/establishments/:establishmentId/events/:eventId',
   authentication,
