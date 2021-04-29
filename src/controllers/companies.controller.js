@@ -367,13 +367,11 @@ async function registerEvent(req, res) {
       { establishmentName: 1, _id: 1 },
     ).orFail();
     const event = new Event(req.body);
-    const establishment = {
+    event.establishment = {
       // eslint-disable-next-line no-underscore-dangle
       establishmentId: establishmentSearch._id,
       establishmentName: establishmentSearch.establishmentName,
     };
-
-    event.establishment = establishment;
     event.status = 'Inactivo';
     const eventSaved = await event.save();
     const eventPreview = {
