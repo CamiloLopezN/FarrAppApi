@@ -4,6 +4,7 @@ const { Establishment, Client } = require('../models/entity.model');
 const validation = require('../middlewares/validations/validation');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 const calculation = require('../utilities/calculations');
+const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
 
 const postReviewEstablishment = async (req, res) => {
   const clientId = req.id;
@@ -31,4 +32,9 @@ const postReviewEstablishment = async (req, res) => {
   }
   return res.status(200).json({ message: 'Successful operation' });
 };
-module.exports.postReviewEstablishment = [validation(establishmentReview), postReviewEstablishment];
+module.exports.postReviewEstablishment = [
+  authentication,
+  authorizationClient,
+  validation(establishmentReview),
+  postReviewEstablishment,
+];

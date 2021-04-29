@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Event, Client } = require('../models/entity.model');
 const calculation = require('../utilities/calculations');
+const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
 
 module.exports.getAllEvents = async (req, res) => {
   let events;
@@ -28,7 +29,7 @@ module.exports.getAllEvents = async (req, res) => {
   return res.status(200).json({ message: events });
 };
 
-module.exports.postReviewEvent = async (req, res) => {
+const postReviewEvent = async (req, res) => {
   const clientId = req.id;
   const { eventId } = req.params;
 
@@ -51,3 +52,5 @@ module.exports.postReviewEvent = async (req, res) => {
   }
   return res.status(200).json({ message: 'Successful operation' });
 };
+
+module.exports.postReviewEvent = [authentication, authorizationClient, postReviewEvent];

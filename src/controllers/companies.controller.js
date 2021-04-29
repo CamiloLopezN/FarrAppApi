@@ -12,6 +12,7 @@ const validation = require('../middlewares/validations/validation');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
 const { authorizationAdminOrCompany } = require('../middlewares/oauth/authentication');
+const { authentication, authorizationCompany } = require('../middlewares/oauth/authentication');
 
 /*
 Registrar una compañia
@@ -116,7 +117,7 @@ async function getCompanyById(req, res) {
   }
 }
 
-companyCtrl.profile = [getCompanyById];
+companyCtrl.profile = [authentication, getCompanyById];
 
 /*
 Actualizar la información del perfil
@@ -145,7 +146,12 @@ async function updateProfile(req, res) {
   return res.status(200).json({ message: 'Successful update' });
 }
 
-companyCtrl.updateProfile = [validation(updateCompany), updateProfile];
+companyCtrl.updateProfile = [
+  authentication,
+  authorizationCompany,
+  validation(updateCompany),
+  updateProfile,
+];
 
 async function registerEstablishment(req, res) {
   const { companyId } = req.params;
@@ -183,7 +189,12 @@ async function registerEstablishment(req, res) {
   return res.status(200).json({ message: 'Successful registration' });
 }
 
-companyCtrl.registerEstablishment = [validation(postEstablishmentVal), registerEstablishment];
+companyCtrl.registerEstablishment = [
+  authentication,
+  authorizationCompany,
+  validation(postEstablishmentVal),
+  registerEstablishment,
+];
 
 async function getPreviewEstablishmentsOfCompany(req, res) {
   const { companyId } = req.params;
@@ -203,7 +214,7 @@ async function getPreviewEstablishmentsOfCompany(req, res) {
   return res.status(200).json({ message: establishments });
 }
 
-companyCtrl.getPreviewEstablishmentsOfCompany = [getPreviewEstablishmentsOfCompany];
+companyCtrl.getPreviewEstablishmentsOfCompany = [authentication, getPreviewEstablishmentsOfCompany];
 
 async function getEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -225,7 +236,7 @@ async function getEstablishmentById(req, res) {
   return res.status(200).json({ message: establishment });
 }
 
-companyCtrl.getEstablishmentById = [getEstablishmentById];
+companyCtrl.getEstablishmentById = [authentication, authorizationCompany, getEstablishmentById];
 
 async function updateEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -270,7 +281,12 @@ async function updateEstablishmentById(req, res) {
   return res.status(200).json({ message: 'Update complete' });
 }
 
-companyCtrl.updateEstablishmentById = [validation(updateEstablishmentVal), updateEstablishmentById];
+companyCtrl.updateEstablishmentById = [
+  authentication,
+  authorizationCompany,
+  validation(updateEstablishmentVal),
+  updateEstablishmentById,
+];
 
 async function deleteEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -331,7 +347,11 @@ async function deleteEstablishmentById(req, res) {
   return res.status(200).json({ message: 'Deleted establishment' });
 }
 
-companyCtrl.deleteEstablishmentById = [deleteEstablishmentById];
+companyCtrl.deleteEstablishmentById = [
+  authentication,
+  authorizationCompany,
+  deleteEstablishmentById,
+];
 
 async function registerEvent(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -385,7 +405,12 @@ async function registerEvent(req, res) {
   return res.status(200).json({ message: 'Successful registration' });
 }
 
-companyCtrl.registerEvent = [validation(postEventVal), registerEvent];
+companyCtrl.registerEvent = [
+  authentication,
+  authorizationCompany,
+  validation(postEventVal),
+  registerEvent,
+];
 
 async function getEventsByEstablishment(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -417,7 +442,11 @@ async function getEventsByEstablishment(req, res) {
   return res.status(200).json({ message: events });
 }
 
-companyCtrl.getEventsByEstablishment = [getEventsByEstablishment];
+companyCtrl.getEventsByEstablishment = [
+  authentication,
+  authorizationCompany,
+  getEventsByEstablishment,
+];
 
 async function getEventById(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
@@ -449,7 +478,7 @@ async function getEventById(req, res) {
   return res.status(200).json({ message: event });
 }
 
-companyCtrl.getEventbyId = [getEventById];
+companyCtrl.getEventbyId = [authentication, authorizationCompany, getEventById];
 
 async function updateEvent(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
@@ -589,9 +618,14 @@ async function deleteEventById(req, res) {
   return res.status(200).json({ message: 'Deleted event' });
 }
 
-companyCtrl.deleteEventById = [deleteEventById];
+companyCtrl.deleteEventById = [authentication, authorizationCompany, deleteEventById];
 
-companyCtrl.updateEvent = [validation(updateEventVal), updateEvent];
+companyCtrl.updateEvent = [
+  authentication,
+  authorizationCompany,
+  validation(updateEventVal),
+  updateEvent,
+];
 
 async function getEventsByCompany(req, res) {
   const { companyId } = req.params;
@@ -618,6 +652,6 @@ async function getEventsByCompany(req, res) {
   return res.status(200).json({ message: events });
 }
 
-companyCtrl.getEventsByCompany = [getEventsByCompany];
+companyCtrl.getEventsByCompany = [authentication, authorizationCompany, getEventsByCompany];
 
 module.exports = companyCtrl;
