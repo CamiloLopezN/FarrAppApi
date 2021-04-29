@@ -1,59 +1,47 @@
 const { Router } = require('express');
 
 const router = Router();
-const companiesController = require('../controllers/companies.controller');
-const establishmentsController = require('../controllers/establishments.controller');
-const eventController = require('../controllers/events.controller');
+const companiesCtrl = require('../controllers/companies.controller');
+const establishmentsCtrl = require('../controllers/establishments.controller');
+const eventCtrl = require('../controllers/events.controller');
 
-router.post('/', companiesController.signUp);
-router.get('/', companiesController.getCompanies);
-router.get('/:companyId', companiesController.profile);
-router.post('/:companyId', companiesController.updateProfile);
-router.get('/:companyId/events', companiesController.getEventsByCompany);
-router.post('/:companyId/establishments', companiesController.registerEstablishment);
-router.get('/:companyId/establishments', companiesController.getPreviewEstablishmentsOfCompany);
-router.get('/:companyId/establishments/:establishmentId', companiesController.getEstablishmentById);
+router.post('/', companiesCtrl.signUp);
+router.get('/', companiesCtrl.getCompanies);
+router.get('/:companyId', companiesCtrl.profile);
+router.post('/:companyId', companiesCtrl.updateProfile);
+router.get('/:companyId/events', companiesCtrl.getEventsByCompany);
+router.post('/:companyId/establishments', companiesCtrl.registerEstablishment);
+router.get('/:companyId/establishments', companiesCtrl.getPreviewEstablishmentsOfCompany);
+router.get('/:companyId/establishments/:establishmentId', companiesCtrl.getEstablishmentById);
 
-router.post(
-  '/:companyId/establishments/:establishmentId',
-  companiesController.updateEstablishmentById,
-);
+router.post('/:companyId/establishments/:establishmentId', companiesCtrl.updateEstablishmentById);
 
-router.delete(
-  '/:companyId/establishments/:establishmentId',
-  companiesController.deleteEstablishmentById,
-);
+router.delete('/:companyId/establishments/:establishmentId', companiesCtrl.deleteEstablishmentById);
 
-router.post(
-  '/:companyId/establishments/:establishmentId/events',
-  companiesController.registerEvent,
-);
+router.post('/:companyId/establishments/:establishmentId/events', companiesCtrl.registerEvent);
 
 router.get(
   '/:companyId/establishments/:establishmentId/events',
-  companiesController.getEventsByEstablishment,
+  companiesCtrl.getEventsByEstablishment,
 );
 
 router.get(
   '/:companyId/establishments/:establishmentId/events/:eventId',
-  companiesController.getEventbyId,
+  companiesCtrl.getEventbyId,
 );
 
 router.delete(
   '/:companyId/establishments/:establishmentId/events/:eventId',
-  companiesController.deleteEventById,
+  companiesCtrl.deleteEventById,
 );
 
 router.post(
   '/:companyId/establishments/:establishmentId/events/:eventId',
-  companiesController.updateEvent,
+  companiesCtrl.updateEvent,
 );
 
-router.post(
-  '/establishments/:establishmentId/review',
-  establishmentsController.postReviewEstablishment,
-);
+router.post('/establishments/:establishmentId/review', establishmentsCtrl.postReviewEstablishment);
 
-router.post('/events/:eventId/review', eventController.postReviewEvent);
+router.post('/events/:eventId/review', eventCtrl.postReviewEvent);
 
 module.exports = router;
