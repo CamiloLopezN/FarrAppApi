@@ -493,8 +493,6 @@ async function updateEvent(req, res) {
         dressCodes: 1,
       },
     ).orFail();
-
-    console.log(eventUpdated);
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
       eventId: eventUpdated._id,
@@ -511,7 +509,6 @@ async function updateEvent(req, res) {
       dressCodes: eventUpdated.dressCodes,
       status: eventUpdated.status,
     };
-    console.log(eventPreview);
     await Establishment.updateOne(
       { _id: establishmentId, 'events.eventId': eventPreview.eventId },
       { $set: { 'events.$': eventPreview } },
