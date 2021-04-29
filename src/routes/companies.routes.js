@@ -3,6 +3,7 @@ const { Router } = require('express');
 const router = Router();
 const companiesController = require('../controllers/companies.controller');
 const establishmentsController = require('../controllers/establishments.controller');
+const eventController = require('../controllers/events.controller');
 const {
   authentication,
   authorizationCompany,
@@ -91,6 +92,13 @@ router.post(
   authentication,
   authorizationClient,
   establishmentsController.postReviewEstablishment,
+);
+
+router.post(
+  '/events/:eventId/review',
+  authentication,
+  authorizationClient,
+  eventController.postReviewEvent,
 );
 
 module.exports = router;

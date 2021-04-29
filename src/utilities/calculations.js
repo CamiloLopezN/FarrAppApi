@@ -1,5 +1,5 @@
 const calculation = {};
-const { Establishment } = require('../models/entity.model');
+const { Establishment, Event } = require('../models/entity.model');
 
 calculation.calculateAvgRatingEstablishment = async (establishmentId) => {
   const establishment = await Establishment.findOne(
@@ -10,5 +10,12 @@ calculation.calculateAvgRatingEstablishment = async (establishmentId) => {
   const avg = sum / establishment.reviews.length;
   const data = { $set: { averageRating: avg } };
   await Establishment.updateOne({ _id: establishmentId }, data).orFail();
+};
+calculation.calculateAvgRatingEvent = async (eventId) => {
+  const event = await Event.findOne({ _id: eventId }, { reviews: 1, _id: 0 }).orFail();
+  const sum = event.reviews.reduce((accum, review) => accum + Number(review.rating), 0);
+  const avg = sum / event.reviews.length;
+  const data = { $set: { averageRating: avg } };
+  await Event.updateOne({ _id: eventId }, data).orFail();
 };
 module.exports = calculation;
