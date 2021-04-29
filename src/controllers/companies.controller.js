@@ -10,8 +10,12 @@ const { postEventVal, updateEventVal } = require('../middlewares/validations/eve
 const validation = require('../middlewares/validations/validation');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
-const { authorizationAdminOrCompany } = require('../middlewares/oauth/authentication');
-const { authentication, authorizationCompany } = require('../middlewares/oauth/authentication');
+const {
+  authentication,
+  authorizationCompany,
+  authorizationAdminOrCompany,
+  authenticationOrPublic,
+} = require('../middlewares/oauth/authentication');
 
 /*
 Registrar una compañia
@@ -220,12 +224,15 @@ module.exports.getPreviewEstablishmentsOfCompany = [
 
 async function getEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
-  if (companyId !== req.id)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+  if (req.id) {
+    if (companyId && companyId !== req.id)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  }
 
   let establishment;
   try {
-    establishment = await Establishment.findOne({ _id: establishmentId }, { __v: 0 });
+    establishment = await Establishment.findOne({ _id: establishmentId }, { __v: 0 }).orFail();
     if (!establishment) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
@@ -238,7 +245,7 @@ async function getEstablishmentById(req, res) {
   return res.status(200).json({ message: establishment });
 }
 
-module.exports.getEstablishmentById = [authentication, authorizationCompany, getEstablishmentById];
+module.exports.getEstablishmentById = [authenticationOrPublic, getEstablishmentById];
 
 async function updateEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
