@@ -28,7 +28,7 @@ module.exports.login = async (req, res) => {
       const company = await Company.findOne({ userId: user._id }, { _id: 1, companyName: 1 });
       // eslint-disable-next-line no-underscore-dangle
       roleId = company._id;
-      userInfo.username = company.companyName;
+      userInfo.firstName = company.companyName;
     } else if (user.role === roles.admin) {
       // eslint-disable-next-line no-underscore-dangle
       const admin = await Admin.findOne(
@@ -38,7 +38,8 @@ module.exports.login = async (req, res) => {
       );
       // eslint-disable-next-line no-underscore-dangle
       roleId = admin._id;
-      userInfo.username = `${admin.firstName}  ${admin.lastName}`;
+      userInfo.firstName = admin.firstName;
+      userInfo.lastName = admin.lastName;
     } else {
       // eslint-disable-next-line no-underscore-dangle
       const client = await Client.findOne(
@@ -48,7 +49,8 @@ module.exports.login = async (req, res) => {
       );
       // eslint-disable-next-line no-underscore-dangle
       roleId = client._id;
-      userInfo.username = `${client.firstName}  ${client.lastName}`;
+      userInfo.firstName = client.firstName;
+      userInfo.lastName = client.lastName;
     }
 
     const payload = {

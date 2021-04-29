@@ -38,12 +38,7 @@ establishmentValidation.establishmentReview = Joi.object({
 
 establishmentValidation.updateEstablishmentVal = Joi.object({
   establishmentName: Joi.string().max(150),
-  establishmentTypes: Joi.array().items(
-    Joi.object({
-      establishmentTypeName: Joi.string().max(50),
-      description: Joi.string().max(150),
-    }),
-  ),
+  establishmentTypes: Joi.array().items(Joi.string()).max(20).required(),
   categories: Joi.array().items(Joi.string()).max(50),
   description: Joi.string().max(1024),
   logoUrl: Joi.string().max(150),

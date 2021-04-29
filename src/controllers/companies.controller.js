@@ -364,6 +364,10 @@ async function registerEvent(req, res) {
       start: event.start,
       end: event.end,
       imageUrl: event.photoUrls[0],
+      capacity: event.capacity,
+      minAge: event.minAge,
+      categories: event.categories,
+      dressCodes: event.dressCodes,
       status: event.status,
     };
     await Establishment.updateOne(
@@ -475,9 +479,20 @@ async function updateEvent(req, res) {
 
     const eventUpdated = await Event.findOne(
       { _id: eventId },
-      { _id: 1, eventName: 1, 'location.city': 1, start: 1, end: 1, photoUrls: 1, status: 1 },
+      {
+        _id: 1,
+        eventName: 1,
+        'location.city': 1,
+        start: 1,
+        end: 1,
+        photoUrls: 1,
+        status: 1,
+        capacity: 1,
+        minAge: 1,
+        categories: 1,
+        dressCodes: 1,
+      },
     ).orFail();
-
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
       eventId: eventUpdated._id,
@@ -488,6 +503,10 @@ async function updateEvent(req, res) {
       start: eventUpdated.start,
       end: eventUpdated.end,
       imageUrl: eventUpdated.photoUrls[0],
+      capacity: eventUpdated.capacity,
+      minAge: eventUpdated.minAge,
+      categories: eventUpdated.categories,
+      dressCodes: eventUpdated.dressCodes,
       status: eventUpdated.status,
     };
     await Establishment.updateOne(
