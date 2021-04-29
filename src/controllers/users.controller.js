@@ -10,6 +10,7 @@ module.exports.login = async (req, res) => {
   const { email, password } = req.body;
   let token;
   let roleId;
+  const userInfo = {};
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).send({ message: 'Incomplete or bad formatted data' });
@@ -24,13 +25,30 @@ module.exports.login = async (req, res) => {
 
     if (user.role === roles.company) {
       // eslint-disable-next-line no-underscore-dangle
-      roleId = await Company.findOne({ userId: user._id }, { _id: 1 });
+      const company = await Company.findOne({ userId: user._id }, { _id: 1, companyName: 1 });
+      // eslint-disable-next-line no-underscore-dangle
+      roleId = company._id;
+      userInfo.username = company.companyName;
     } else if (user.role === roles.admin) {
       // eslint-disable-next-line no-underscore-dangle
-      roleId = await Admin.findOne({ userId: user._id }, { _id: 1 });
+      const admin = await Admin.findOne(
+        // eslint-disable-next-line no-underscore-dangle
+        { userId: user._id },
+        { _id: 1, firstName: 1, lastName: 1 },
+      );
+      // eslint-disable-next-line no-underscore-dangle
+      roleId = admin._id;
+      userInfo.username = `${admin.firstName}  ${admin.lastName}`;
     } else {
       // eslint-disable-next-line no-underscore-dangle
-      roleId = await Client.findOne({ userId: user._id }, { _id: 1 });
+      const client = await Client.findOne(
+        // eslint-disable-next-line no-underscore-dangle
+        { userId: user._id },
+        { _id: 1, firstName: 1, lastName: 1 },
+      );
+      // eslint-disable-next-line no-underscore-dangle
+      roleId = client._id;
+      userInfo.username = `${client.firstName}  ${client.lastName}`;
     }
 
     const payload = {
@@ -49,7 +67,7 @@ module.exports.login = async (req, res) => {
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
     return res.status(500).json({ message: `internal server error  ${err}` });
   }
-  return res.status(200).json({ token });
+  return res.status(200).json({ token, userInfo });
 };
 
 module.exports.reqDeactiveUser = async (req, res) => {
