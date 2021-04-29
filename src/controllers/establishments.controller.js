@@ -22,7 +22,7 @@ const postReviewEstablishment = async (req, res) => {
       { _id: establishmentId },
       { $push: { reviews: estReview } },
     ).orFail();
-    calculation.calculateAvgRatingEstablishment(establishmentId);
+    await calculation.calculateAvgRatingEstablishment(establishmentId);
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });

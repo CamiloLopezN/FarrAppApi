@@ -42,7 +42,7 @@ const postReviewEvent = async (req, res) => {
       rating: req.body.rating,
     };
     await Event.updateOne({ _id: eventId }, { $push: { reviews: eventReview } }).orFail();
-    calculation.calculateAvgRatingEvent(eventId);
+    await calculation.calculateAvgRatingEvent(eventId);
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
