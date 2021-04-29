@@ -23,7 +23,7 @@ const postClient = async (req, res) => {
   user.password = await user.encryptPassword(password || generatePasswordRand(8, 'alf'));
 
   const month = birthdate.split('-')[1] - 1;
-  const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
+  const myDate = new Date(birthdate.split('-')[0], month, birthdate.split('-')[2]);
   const client = new Client({
     // eslint-disable-next-line no-underscore-dangle
     userId: user._id,
@@ -65,7 +65,7 @@ const updateClientProfile = async (req, res) => {
   if (req.id !== clientId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
   const month = birthdate.split('-')[1] - 1;
-  const myDate = new Date(birthdate.split('-')[2], month, birthdate.split('-')[0]);
+  const myDate = new Date(birthdate.split('-')[0], month, birthdate.split('-')[2]);
   const data = {
     $set: { birthdate: myDate, firstName, lastName, gender },
   };
