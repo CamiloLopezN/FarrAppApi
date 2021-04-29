@@ -9,6 +9,7 @@ const { establishmentId } = require('../middlewares/validations/establishment.jo
 const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
+const calculation = require('../utilities/calculations');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
@@ -126,19 +127,29 @@ module.exports.getClients = [auth.authentication, getClients];
 const followEstablishment = async (req, res) => {
   const clientId = req.id;
 
-  const establish = await Establishment.findOne({ _id: req.body.establishmentId });
-
-  const estPreview = {
-    // eslint-disable-next-line no-underscore-dangle
-    establishmentId: establish._id,
-    companyId: establish.company.companyId,
-    establishmentName: establish.establishmentName,
-    location: establish.location,
-    imageUrl: establish.photoUrls[0],
-    isActive: establish.isActive,
-  };
+  const queryFind = { 'follows.establishmentId': req.body.establishmentId };
   try {
-    await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
+    const follow = await Client.findOne(queryFind);
+
+    if (!follow) {
+      const establish = await Establishment.findOne({ _id: req.body.establishmentId });
+      const estPreview = {
+        // eslint-disable-next-line no-underscore-dangle
+        establishmentId: establish._id,
+        companyId: establish.company.companyId,
+        establishmentName: establish.establishmentName,
+        location: establish.location,
+        imageUrl: establish.photoUrls[0],
+        isActive: establish.isActive,
+      };
+      await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
+      await calculation.sumFollower(req.body.establishmentId);
+    } else {
+      await Client.updateOne(queryFind, {
+        $pull: { follows: { establishmentId: req.body.establishmentId } },
+      }).orFail();
+      await calculation.deductFollower(req.body.establishmentId);
+    }
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
