@@ -11,7 +11,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/login', validator(login), userController.login);
-router.put(
+router.post(
   '/request-deactivation/:idToReqDeactive',
   auth.authentication,
   userController.reqDeactiveUser,

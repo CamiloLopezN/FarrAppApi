@@ -6,8 +6,8 @@ const clientController = require('../controllers/clients.controller');
 router.post('/', clientController.postClient);
 router.get('/:clientId', clientController.getClientById);
 router.get('/', clientController.getClients);
-router.put('/:clientId/update', clientController.updateClientProfile);
-router.put('/follow-establishment', clientController.followEstablishment);
-router.put('/event-interest', clientController.interestForEvent);
+router.post('/:clientId/update', clientController.updateClientProfile);
+router.post('/follow-establishment', clientController.followEstablishment);
+router.post('/event-interest', clientController.interestForEvent);
 
 module.exports = router;
