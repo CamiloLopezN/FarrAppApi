@@ -173,6 +173,10 @@ const interestForEvent = async (req, res) => {
       end: event.end,
       imageUrl: event.photoUrls[0],
       status: event.status,
+      capacity: event.capacity,
+      minAge: event.minAge,
+      categories: event.categories,
+      dressCodes: event.dressCodes,
     };
     await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
   } catch (err) {
