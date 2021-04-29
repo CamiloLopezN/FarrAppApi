@@ -178,7 +178,7 @@ async function registerEstablishment(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error`, err });
+    return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful registration' });
 }
