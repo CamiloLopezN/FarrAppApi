@@ -11,17 +11,31 @@ const config = {
 oauth.authentication = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token)
-    return res
-      .status(401)
-      .json({ message: 'Acceso no autorizado, se debe proporcionar un token valido' }); // if there isn't any token
+  if (!token) return res.status(401).json({ message: 'Unauthorized access' }); // if there isn't any token
 
   await jwt.verify(token, config.secretKey, (err, payload) => {
-    if (err) return res.status(403).json({ message: 'Usuario invalido, el token no es valido' });
+    if (err) return res.status(403).json({ message: 'Invalid Token' });
     req.payload = payload;
     return next();
   });
   return true;
+};
+
+oauth.authenticationOrPublic = async (req, res, next) => {
+  if (req.headers.authorization) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Unauthorized access' }); // if there isn't any token
+
+    await jwt.verify(token, config.secretKey, (err, payload) => {
+      if (err) return res.status(403).json({ message: 'Invalid Token' });
+      req.payload = payload;
+      if (!payload.role === roles.company) return res.status(403).json({ message: 'Forbidden' });
+      req.id = payload.roleId;
+      return true;
+    });
+  }
+  return next();
 };
 
 oauth.authorizationAdmin = async (req, res, next) => {
