@@ -38,6 +38,7 @@ oauth.authenticationOrPublic = async (req, res, next) => {
       req.payload = payload;
       if (!payload.role === roles.company) return res.status(403).json({ message: 'Forbidden' });
       req.id = payload.roleId;
+      return true;
     });
   }
   return next();
