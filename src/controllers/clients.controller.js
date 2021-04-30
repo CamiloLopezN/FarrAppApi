@@ -132,7 +132,7 @@ const followEstablishment = async (req, res) => {
     const follow = await Client.findOne(queryFind);
 
     if (!follow) {
-      const establish = await Establishment.findOne({ _id: req.body.establishmentId });
+      const establish = await Establishment.findOne({ _id: req.body.establishmentId }).orFail();
       const estPreview = {
         // eslint-disable-next-line no-underscore-dangle
         establishmentId: establish._id,
