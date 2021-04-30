@@ -203,7 +203,6 @@ const interestForEvent = async (req, res) => {
       await calculation.deductInterested(req.body.eventId);
     }
   } catch (err) {
-    console.log(err);
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
