@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const { Event, Client } = require('../models/entity.model');
 const calculation = require('../utilities/calculations');
 const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
+const validation = require('../middlewares/validations/validation');
+const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 
 module.exports.getAllEvents = async (req, res) => {
   let events;
@@ -40,6 +42,7 @@ const postReviewEvent = async (req, res) => {
       authorName: `${client.firstName} ${client.lastName}`,
       comment: req.body.comment,
       rating: req.body.rating,
+      title: req.body.title,
     };
     await Event.updateOne({ _id: eventId }, { $push: { reviews: eventReview } }).orFail();
     await calculation.calculateAvgRatingEvent(eventId);
@@ -53,4 +56,9 @@ const postReviewEvent = async (req, res) => {
   return res.status(200).json({ message: 'Successful operation' });
 };
 
-module.exports.postReviewEvent = [authentication, authorizationClient, postReviewEvent];
+module.exports.postReviewEvent = [
+  authentication,
+  authorizationClient,
+  validation(establishmentReview),
+  postReviewEvent,
+];
