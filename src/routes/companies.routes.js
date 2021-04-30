@@ -40,8 +40,4 @@ router.post(
   companiesCtrl.updateEvent,
 );
 
-router.post('/establishments/:establishmentId/review', establishmentsCtrl.postReviewEstablishment);
-
-router.post('/events/:eventId/review', eventCtrl.postReviewEvent);
-
 module.exports = router;

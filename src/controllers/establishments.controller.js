@@ -9,10 +9,10 @@ const { authentication, authorizationClient } = require('../middlewares/oauth/au
 const postReviewEstablishment = async (req, res) => {
   const clientId = req.id;
   const { establishmentId } = req.params;
-
+  let estReview;
   try {
     const client = await Client.findOne({ _id: clientId }).orFail();
-    const estReview = {
+    estReview = {
       authorId: clientId,
       authorName: `${client.firstName} ${client.lastName}`,
       comment: req.body.comment,
@@ -31,7 +31,7 @@ const postReviewEstablishment = async (req, res) => {
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     return res.status(500).json({ message: 'Internal server error' });
   }
-  return res.status(200).json({ message: 'Successful operation' });
+  return res.status(201).json({ estReview });
 };
 module.exports.postReviewEstablishment = [
   authentication,
