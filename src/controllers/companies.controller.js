@@ -10,8 +10,12 @@ const { postEventVal, updateEventVal } = require('../middlewares/validations/eve
 const validation = require('../middlewares/validations/validation');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
-const { authorizationAdminOrCompany } = require('../middlewares/oauth/authentication');
-const { authentication, authorizationCompany } = require('../middlewares/oauth/authentication');
+const {
+  authentication,
+  authorizationCompany,
+  authorizationAdminOrCompany,
+  authenticationOrPublic,
+} = require('../middlewares/oauth/authentication');
 
 /*
 Registrar una compañia
@@ -220,25 +224,30 @@ module.exports.getPreviewEstablishmentsOfCompany = [
 
 async function getEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
-  if (companyId !== req.id)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+
+  if (req.id) {
+    if (companyId && companyId !== req.id)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  }
 
   let establishment;
   try {
-    establishment = await Establishment.findOne({ _id: establishmentId }, { __v: 0 });
+    establishment = await Establishment.findOne({ _id: establishmentId }, { __v: 0 }).orFail();
     if (!establishment) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
     return res.status(500).json({ message: `Internal server error` });
   }
 
   return res.status(200).json({ message: establishment });
 }
 
-module.exports.getEstablishmentById = [authentication, authorizationCompany, getEstablishmentById];
+module.exports.getEstablishmentById = [authenticationOrPublic, getEstablishmentById];
 
 async function updateEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
@@ -452,33 +461,36 @@ async function getEventById(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
   if (!companyId || !establishmentId || !eventId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
   let event;
   try {
-    const establishment = await Establishment.findOne({
-      $and: [
-        { _id: { $eq: establishmentId } },
-        { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
-        { 'events.eventId': { $in: [eventId] } },
-      ],
-    });
-
-    if (!establishment)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-
-    event = await Event.findOne({ _id: eventId }).orFail();
+    if (req.id) {
+      if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+      const establishment = await Establishment.findOne({
+        $and: [
+          { _id: { $eq: establishmentId } },
+          { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
+          { 'events.eventId': { $in: [eventId] } },
+        ],
+      });
+      if (!establishment)
+        return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      event = await Event.findOne({ _id: eventId }).orFail();
+    } else {
+      event = await Event.findOne({ _id: eventId }, { 'tickets.promotionalCodes': 0 }).orFail();
+    }
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
     return res.status(500).json({ message: `Internal server error` });
   }
-
   return res.status(200).json({ message: event });
 }
 
-module.exports.getEventbyId = [authentication, authorizationCompany, getEventById];
+module.exports.getEventbyId = [authenticationOrPublic, getEventById];
 
 async function updateEvent(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
