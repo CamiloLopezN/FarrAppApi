@@ -169,28 +169,41 @@ module.exports.followEstablishment = [
 const interestForEvent = async (req, res) => {
   const clientId = req.id;
 
+  const queryFind = { 'interests.eventId': req.body.eventId };
   try {
-    const event = await Event.findOne({ _id: req.body.eventId }).orFail();
-    const est = await Establishment.findOne({ _id: event.establishment.establishmentId }).orFail();
+    const interest = await Client.findOne(queryFind);
+    if (!interest) {
+      const event = await Event.findOne({ _id: req.body.eventId }).orFail();
+      const est = await Establishment.findOne({
+        _id: event.establishment.establishmentId,
+      }).orFail();
 
-    const eventPreview = {
-      // eslint-disable-next-line no-underscore-dangle
-      eventId: event._id,
-      establishmentId: event.establishment.establishmentId,
-      companyId: est.company.companyId,
-      eventName: event.eventName,
-      city: event.location.city,
-      start: event.start,
-      end: event.end,
-      imageUrl: event.photoUrls[0],
-      status: event.status,
-      capacity: event.capacity,
-      minAge: event.minAge,
-      categories: event.categories,
-      dressCodes: event.dressCodes,
-    };
-    await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
+      const eventPreview = {
+        // eslint-disable-next-line no-underscore-dangle
+        eventId: event._id,
+        establishmentId: event.establishment.establishmentId,
+        companyId: est.company.companyId,
+        eventName: event.eventName,
+        city: event.location.city,
+        start: event.start,
+        end: event.end,
+        imageUrl: event.photoUrls[0],
+        status: event.status,
+        capacity: event.capacity,
+        minAge: event.minAge,
+        categories: event.categories,
+        dressCodes: event.dressCodes,
+      };
+      await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
+      await calculation.sumInterested(req.body.eventId);
+    } else {
+      await Client.updateOne(queryFind, {
+        $pull: { interests: { eventId: req.body.eventId } },
+      }).orFail();
+      await calculation.deductInterested(req.body.eventId);
+    }
   } catch (err) {
+    console.log(err);
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)

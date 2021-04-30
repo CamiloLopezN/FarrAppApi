@@ -32,4 +32,18 @@ calculation.deductFollower = async (establishmentId) => {
   const data = { $set: { followers } };
   await Establishment.updateOne({ _id: establishmentId }, data).orFail();
 };
+calculation.sumInterested = async (eventId) => {
+  const event = await Event.findOne({ _id: eventId }).orFail();
+  const foundInterested = event.interested || 0;
+  const interested = foundInterested + 1;
+  const data = { $set: { interested } };
+  await Event.updateOne({ _id: eventId }, data).orFail();
+};
+calculation.deductInterested = async (eventId) => {
+  const event = await Event.findOne({ _id: eventId }).orFail();
+  const foundInterested = event.interested || 0;
+  const interested = foundInterested - 1;
+  const data = { $set: { interested } };
+  await Event.updateOne({ _id: eventId }, data).orFail();
+}
 module.exports = calculation;
