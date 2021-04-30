@@ -17,6 +17,7 @@ const postReviewEstablishment = async (req, res) => {
       authorName: `${client.firstName} ${client.lastName}`,
       comment: req.body.comment,
       rating: req.body.rating,
+      title: req.body.title,
     };
     await Establishment.updateOne(
       { _id: establishmentId },
