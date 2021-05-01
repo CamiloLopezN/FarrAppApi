@@ -1,4 +1,5 @@
 const { Schema } = require('mongoose');
+const uniqueValidator = require('mongoose-unique-validator');
 const locationSchema = require('./location.schema');
 const reviewSchema = require('./review.schema');
 const eventTicketSchema = require('./eventTicket.schema');
@@ -27,5 +28,7 @@ const eventSchema = new Schema({
   reviews: [reviewSchema],
   interested: { type: Number },
 });
+
+eventSchema.plugin(uniqueValidator);
 
 module.exports = eventSchema;

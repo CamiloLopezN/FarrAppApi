@@ -1,8 +1,9 @@
 const { Schema } = require('mongoose');
+const uniqueValidator = require('mongoose-unique-validator');
 const promotionalCodeSchema = require('./promotionalCode.schema');
 
 const eventTicketSchema = new Schema({
-  ticketName: { type: String, required: true, unique: true },
+  ticketName: { type: String, required: true },
   description: { type: String, required: true },
   onlinePrice: { type: Number, required: true },
   onDoorPrice: { type: String, required: true },
@@ -15,7 +16,9 @@ const eventTicketSchema = new Schema({
   maxPerPurchase: { type: Number, required: true },
   minPerPurchase: { type: Number, required: true },
   otherInfo: { type: String },
-  promotionalCodes: [promotionalCodeSchema],
+  promotionalCodes: { type: [promotionalCodeSchema], sparse: true },
 });
+
+eventTicketSchema.plugin(uniqueValidator);
 
 module.exports = eventTicketSchema;
