@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const { Event, Client } = require('../models/entity.model');
 const calculation = require('../utilities/calculations');
 const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
+const validation = require('../middlewares/validations/validation');
+const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 
 module.exports.getAllEvents = async (req, res) => {
   let events;
@@ -32,16 +34,23 @@ module.exports.getAllEvents = async (req, res) => {
 const postReviewEvent = async (req, res) => {
   const clientId = req.id;
   const { eventId } = req.params;
-
+  let eventReview;
+  let createdReview;
   try {
     const client = await Client.findOne({ _id: clientId }).orFail();
-    const eventReview = {
+    eventReview = {
       authorId: clientId,
       authorName: `${client.firstName} ${client.lastName}`,
       comment: req.body.comment,
       rating: req.body.rating,
+      title: req.body.title,
     };
-    await Event.updateOne({ _id: eventId }, { $push: { reviews: eventReview } }).orFail();
+    const updatedEvent = await Event.findOneAndUpdate(
+      { _id: eventId },
+      { $push: { reviews: eventReview } },
+      { new: true },
+    ).orFail();
+    createdReview = updatedEvent.reviews.pop();
     await calculation.calculateAvgRatingEvent(eventId);
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
@@ -50,7 +59,12 @@ const postReviewEvent = async (req, res) => {
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     return res.status(500).json({ message: 'Internal server error' });
   }
-  return res.status(200).json({ message: 'Successful operation' });
+  return res.status(201).json({ createdReview });
 };
 
-module.exports.postReviewEvent = [authentication, authorizationClient, postReviewEvent];
+module.exports.postReviewEvent = [
+  authentication,
+  authorizationClient,
+  validation(establishmentReview),
+  postReviewEvent,
+];

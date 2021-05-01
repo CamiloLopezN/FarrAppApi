@@ -9,6 +9,7 @@ const { establishmentId } = require('../middlewares/validations/establishment.jo
 const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
+const calculation = require('../utilities/calculations');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
@@ -126,19 +127,29 @@ module.exports.getClients = [auth.authentication, getClients];
 const followEstablishment = async (req, res) => {
   const clientId = req.id;
 
-  const establish = await Establishment.findOne({ _id: req.body.establishmentId });
-
-  const estPreview = {
-    // eslint-disable-next-line no-underscore-dangle
-    establishmentId: establish._id,
-    companyId: establish.company.companyId,
-    establishmentName: establish.establishmentName,
-    location: establish.location,
-    imageUrl: establish.photoUrls[0],
-    isActive: establish.isActive,
-  };
+  const queryFind = { 'follows.establishmentId': req.body.establishmentId };
   try {
-    await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
+    const follow = await Client.findOne(queryFind);
+
+    if (!follow) {
+      const establish = await Establishment.findOne({ _id: req.body.establishmentId }).orFail();
+      const estPreview = {
+        // eslint-disable-next-line no-underscore-dangle
+        establishmentId: establish._id,
+        companyId: establish.company.companyId,
+        establishmentName: establish.establishmentName,
+        location: establish.location,
+        imageUrl: establish.photoUrls[0],
+        isActive: establish.isActive,
+      };
+      await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
+      await calculation.sumFollower(req.body.establishmentId);
+    } else {
+      await Client.updateOne(queryFind, {
+        $pull: { follows: { establishmentId: req.body.establishmentId } },
+      }).orFail();
+      await calculation.deductFollower(req.body.establishmentId);
+    }
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
@@ -158,27 +169,39 @@ module.exports.followEstablishment = [
 const interestForEvent = async (req, res) => {
   const clientId = req.id;
 
+  const queryFind = { 'interests.eventId': req.body.eventId };
   try {
-    const event = await Event.findOne({ _id: req.body.eventId }).orFail();
-    const est = await Establishment.findOne({ _id: event.establishment.establishmentId }).orFail();
+    const interest = await Client.findOne(queryFind);
+    if (!interest) {
+      const event = await Event.findOne({ _id: req.body.eventId }).orFail();
+      const est = await Establishment.findOne({
+        _id: event.establishment.establishmentId,
+      }).orFail();
 
-    const eventPreview = {
-      // eslint-disable-next-line no-underscore-dangle
-      eventId: event._id,
-      establishmentId: event.establishment.establishmentId,
-      companyId: est.company.companyId,
-      eventName: event.eventName,
-      city: event.location.city,
-      start: event.start,
-      end: event.end,
-      imageUrl: event.photoUrls[0],
-      status: event.status,
-      capacity: event.capacity,
-      minAge: event.minAge,
-      categories: event.categories,
-      dressCodes: event.dressCodes,
-    };
-    await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
+      const eventPreview = {
+        // eslint-disable-next-line no-underscore-dangle
+        eventId: event._id,
+        establishmentId: event.establishment.establishmentId,
+        companyId: est.company.companyId,
+        eventName: event.eventName,
+        city: event.location.city,
+        start: event.start,
+        end: event.end,
+        imageUrl: event.photoUrls[0],
+        status: event.status,
+        capacity: event.capacity,
+        minAge: event.minAge,
+        categories: event.categories,
+        dressCodes: event.dressCodes,
+      };
+      await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
+      await calculation.sumInterested(req.body.eventId);
+    } else {
+      await Client.updateOne(queryFind, {
+        $pull: { interests: { eventId: req.body.eventId } },
+      }).orFail();
+      await calculation.deductInterested(req.body.eventId);
+    }
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });

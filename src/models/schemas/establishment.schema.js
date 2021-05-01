@@ -23,6 +23,7 @@ const establishmentSchema = new Schema({
   },
   reviews: { type: [reviewSchema] },
   events: { type: [eventPreviewSchema] },
+  followers: { type: Number },
 });
 
 module.exports = establishmentSchema;

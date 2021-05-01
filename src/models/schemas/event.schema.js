@@ -26,6 +26,7 @@ const eventSchema = new Schema({
   averageRating: { type: Number },
   tickets: { type: [eventTicketSchema], required: true },
   reviews: [reviewSchema],
+  interested: { type: Number },
 });
 
 eventSchema.plugin(uniqueValidator);

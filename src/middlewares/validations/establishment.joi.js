@@ -33,6 +33,7 @@ establishmentValidation.establishmentId = Joi.object({
 
 establishmentValidation.establishmentReview = Joi.object({
   comment: Joi.string().max(512),
+  title: Joi.string().max(65),
   rating: Joi.number().max(5),
 });
 
