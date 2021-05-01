@@ -35,6 +35,7 @@ const postReviewEvent = async (req, res) => {
   const clientId = req.id;
   const { eventId } = req.params;
   let eventReview;
+  let createdReview;
   try {
     const client = await Client.findOne({ _id: clientId }).orFail();
     eventReview = {
@@ -44,7 +45,12 @@ const postReviewEvent = async (req, res) => {
       rating: req.body.rating,
       title: req.body.title,
     };
-    await Event.updateOne({ _id: eventId }, { $push: { reviews: eventReview } }).orFail();
+    const updatedEvent = await Event.findOneAndUpdate(
+      { _id: eventId },
+      { $push: { reviews: eventReview } },
+      { new: true },
+    ).orFail();
+    createdReview = updatedEvent.reviews.pop();
     await calculation.calculateAvgRatingEvent(eventId);
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
@@ -53,7 +59,7 @@ const postReviewEvent = async (req, res) => {
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     return res.status(500).json({ message: 'Internal server error' });
   }
-  return res.status(201).json({ eventReview });
+  return res.status(201).json({ createdReview });
 };
 
 module.exports.postReviewEvent = [
