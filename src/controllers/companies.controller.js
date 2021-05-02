@@ -15,6 +15,7 @@ const {
   authorizationCompany,
   authorizationAdminOrCompany,
   authenticationOrPublic,
+  authorize,
 } = require('../middlewares/oauth/authentication');
 const Mailer = require('../mail/index');
 const Utils = require('./utils');
