@@ -133,8 +133,23 @@ module.exports.verifyAccount = async (req, res) => {
     if (err) return res.status(403).json({ message: 'Invalid Token' });
     return payload.email;
   });
-  console.log(email);
-  // await User.findOneAndUpdate({ email }).orFail();
+
+  try {
+    const user = await User.findOne({ email }).orFail();
+    const data = { isVerified: true };
+    if (user.role !== roles.company) {
+      data.isActive = true;
+    }
+    await User.findOneAndUpdate({ email }, { $set: data }).orFail();
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+    return res.status(500).json({ message: `Internal server error` });
+  }
 
   return res.status(200).json({ message: 'Account Verified' });
 };
