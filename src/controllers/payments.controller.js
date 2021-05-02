@@ -83,6 +83,8 @@ module.exports.postCompanyCustomer = [authorize([roles.company, roles.admin]), p
 
 const subscribeToPlan = async (req, res) => {
   const { planId, customerId, cardToken, docType, docNumber } = req.body;
+  if (req.payload.role === roles.company && req.payload.customerId !== customerId)
+    return res.status(403).json({ message: 'Forbidden' });
   let suscrib;
   try {
     suscrib = await subscribeCustomer(planId, customerId, cardToken, docType, docNumber);
@@ -93,7 +95,7 @@ const subscribeToPlan = async (req, res) => {
   return res.status(200).json(suscrib);
 };
 
-module.exports.postSubscription = [auth.authentication, auth.authorizationCompany, subscribeToPlan];
+module.exports.postSubscription = [authorize([roles.admin, roles.company]), subscribeToPlan];
 
 const cancelSubscription = async (req, res) => {
   let cancellation;
