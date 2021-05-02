@@ -9,7 +9,7 @@ const { generatePasswordRand } = require('../utilities/generatePass');
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
   let token;
-  let roleId;
+  const payload = {};
   const userInfo = {};
   try {
     const user = await User.findOne({ email });
@@ -24,10 +24,14 @@ module.exports.login = async (req, res) => {
     }
 
     if (user.role === roles.company) {
+      const company = await Company.findOne(
+        // eslint-disable-next-line no-underscore-dangle
+        { userId: user._id },
+        { _id: 1, companyName: 1, customerId: 1 },
+      );
       // eslint-disable-next-line no-underscore-dangle
-      const company = await Company.findOne({ userId: user._id }, { _id: 1, companyName: 1 });
-      // eslint-disable-next-line no-underscore-dangle
-      roleId = company._id;
+      payload.roleId = company._id;
+      payload.customerId = company.customerId;
       userInfo.firstName = company.companyName;
     } else if (user.role === roles.admin) {
       // eslint-disable-next-line no-underscore-dangle
@@ -37,7 +41,7 @@ module.exports.login = async (req, res) => {
         { _id: 1, firstName: 1, lastName: 1 },
       );
       // eslint-disable-next-line no-underscore-dangle
-      roleId = admin._id;
+      payload.roleId = admin._id;
       userInfo.firstName = admin.firstName;
       userInfo.lastName = admin.lastName;
     } else {
@@ -48,19 +52,13 @@ module.exports.login = async (req, res) => {
         { _id: 1, firstName: 1, lastName: 1 },
       );
       // eslint-disable-next-line no-underscore-dangle
-      roleId = client._id;
+      payload.roleId = client._id;
       userInfo.firstName = client.firstName;
       userInfo.lastName = client.lastName;
     }
 
-    const payload = {
-      // eslint-disable-next-line no-underscore-dangle
-      userId: user._id,
-      // eslint-disable-next-line no-underscore-dangle
-      roleId: roleId._id,
-      role: user.role,
-    };
-
+    // eslint-disable-next-line no-underscore-dangle
+    payload.userId = user._id;
     token = await generateToken(payload);
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)

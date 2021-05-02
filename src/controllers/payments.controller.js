@@ -23,10 +23,12 @@ module.exports.postToken = (req, res) => {
   });
 };
 
-module.exports.getCustomers = (req, res) => {
-  listCustomers();
-  return res.status(200);
+const getCustomers = async (req, res) => {
+  const customers = await listCustomers();
+  return res.status(200).json(customers);
 };
+
+module.exports.listCustomers = [auth.authentication, auth.authorizationAdmin, getCustomers];
 
 const postCustomer = async (req, res) => {
   const {
