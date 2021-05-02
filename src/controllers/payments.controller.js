@@ -1,4 +1,5 @@
-const auth = require('../middlewares/oauth/authentication');
+const { authorize } = require('../middlewares/oauth/authentication');
+const roles = require('../middlewares/oauth/roles');
 const {
   createToken,
   listCustomers,
@@ -28,7 +29,7 @@ const getCustomers = async (req, res) => {
   return res.status(200).json(customers);
 };
 
-module.exports.listCustomers = [auth.authentication, auth.authorizationAdmin, getCustomers];
+module.exports.listCustomers = [authorize([roles.admin]), getCustomers];
 
 const postCustomer = async (req, res) => {
   const {
