@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { User, Company, Admin, Client } = require('../models/entity.model');
 const { generateToken } = require('../middlewares/oauth/authentication');
 const roles = require('../middlewares/oauth/roles');
@@ -15,13 +16,15 @@ module.exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).send({ message: 'Incomplete or bad formatted data' });
 
-    if (!user.isVerified) {
-      return res.status(403).send({ message: 'Forbidden' });
-    }
+    if (!user.isActive) return res.status(403).send({ message: 'Forbidden' });
 
     if (!(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res
+        .status(401)
+        .json({ message: 'Wrong or no authentication email/password provided' });
     }
+
+    if (!user.isVerified) return res.status(403).send({ message: 'Email is not verified' });
 
     if (user.role === roles.company) {
       const company = await Company.findOne(
@@ -32,6 +35,7 @@ module.exports.login = async (req, res) => {
       // eslint-disable-next-line no-underscore-dangle
       payload.roleId = company._id;
       payload.customerId = company.customerId;
+      payload.role = roles.company;
       userInfo.firstName = company.companyName;
     } else if (user.role === roles.admin) {
       // eslint-disable-next-line no-underscore-dangle
@@ -42,6 +46,7 @@ module.exports.login = async (req, res) => {
       );
       // eslint-disable-next-line no-underscore-dangle
       payload.roleId = admin._id;
+      payload.role = roles.admin;
       userInfo.firstName = admin.firstName;
       userInfo.lastName = admin.lastName;
     } else {
@@ -53,6 +58,7 @@ module.exports.login = async (req, res) => {
       );
       // eslint-disable-next-line no-underscore-dangle
       payload.roleId = client._id;
+      payload.role = roles.client;
       userInfo.firstName = client.firstName;
       userInfo.lastName = client.lastName;
     }
@@ -117,4 +123,18 @@ module.exports.recoverPassword = async (req, res) => {
     utils.sendRecoverPassword(email, password);
     return res.status(200).json({ message: 'Correo de recuperación enviado.' });
   });
+};
+
+module.exports.verifyAccount = async (req, res) => {
+  const { token } = req.params;
+  if (!token || !req.params) return res.status(403).send({ message: 'Forbidden' });
+
+  const email = await jwt.verify(token, process.env.JWT_KEY, async (err, payload) => {
+    if (err) return res.status(403).json({ message: 'Invalid Token' });
+    return payload.email;
+  });
+  console.log(email);
+  // await User.findOneAndUpdate({ email }).orFail();
+
+  return res.status(200).json({ message: 'Account Verified' });
 };
