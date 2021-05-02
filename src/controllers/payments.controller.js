@@ -187,9 +187,9 @@ module.exports.addCustomerCard = [auth.authentication, auth.authorizationCompany
 
 const removeCustomerCard = async (req, res) => {
   let removedCard;
-  const { cardFranchise, cardToken } = req.body;
+  const { franchise, mask } = req.query;
   try {
-    removedCard = await payment.removeCustomerCard(cardFranchise, cardToken, req.params.customerId);
+    removedCard = await payment.removeCustomerCard(franchise, mask, req.params.customerId);
     if (!removedCard.status) return res.status(404).json({ message: 'Customer not found' });
   } catch (error) {
     return res.status(503).json({ message: 'Service unavailable' });
