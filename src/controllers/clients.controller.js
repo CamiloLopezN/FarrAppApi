@@ -36,14 +36,18 @@ const postClient = async (req, res) => {
   });
 
   try {
-    await client.save();
-    await user.save();
-
-    const payload = {
-      email,
-      username: firstName,
-    };
-    sendAccountValidator(payload, `${req.protocol}://${req.headers.host}/api/users/verify-account`);
+    const foundClient = await User.findOne({ email });
+    if (!foundClient) {
+      await client.save();
+      await user.save();
+    }
+    sendAccountValidator(
+      {
+        email,
+        username: firstName,
+      },
+      `${req.protocol}://${req.headers.host}/api/users/verify-account`,
+    );
   } catch (error) {
     // eslint-disable-next-line no-underscore-dangle
     await User.deleteOne({ _id: user._id });
@@ -55,7 +59,7 @@ const postClient = async (req, res) => {
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
     return res.status(500).json({ message: 'Internal server error' });
   }
-  return res.status(201).json({
+  return res.status(200).json({
     message: 'Successful operation',
   });
 };
