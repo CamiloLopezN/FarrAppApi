@@ -64,8 +64,15 @@ module.exports.changeDefaultCard = (cardFranchise, cardToken, cardMask, customer
     customer_id: customerId,
   });
 
-module.exports.addCard = (cardToken, customerId) =>
+module.exports.addCustomerCard = (cardToken, customerId) =>
   epayco.customers.addNewToken({
     token_card: cardToken,
+    customer_id: customerId,
+  });
+
+module.exports.removeCustomerCard = (cardFranchise, cardMask, customerId) =>
+  epayco.customers.delete({
+    franchise: cardFranchise,
+    mask: cardMask,
     customer_id: customerId,
   });

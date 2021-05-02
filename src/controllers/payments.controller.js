@@ -140,4 +140,65 @@ const getCustomerById = async (req, res) => {
   return res.status(200).json(customer.data);
 };
 
-module.exports.getCustomer = [getCustomerById];
+module.exports.getCustomer = [
+  auth.authentication,
+  auth.authorizationAdminOrCompany,
+  getCustomerById,
+];
+
+const changeDefaultCard = async (req, res) => {
+  let defaultCard;
+  const { cardFranchise, cardToken, cardMask } = req.body;
+  try {
+    defaultCard = await payment.changeDefaultCard(
+      cardFranchise,
+      cardToken,
+      cardMask,
+      req.params.customerId,
+    );
+    if (!defaultCard.status) return res.status(404).json({ message: 'Customer not found' });
+  } catch (error) {
+    return res.status(503).json({ message: 'Service unavailable' });
+  }
+  return res.status(200).json(defaultCard.data);
+};
+
+module.exports.changeDefaultCard = [
+  auth.authentication,
+  auth.authorizationCompany,
+  changeDefaultCard,
+];
+
+const addCustomerCard = async (req, res) => {
+  const { customerId } = req.params;
+  const { cardNumber, cardExpYear, cardExpMonth, cardCVC } = req.body;
+  try {
+    const token = await createToken(cardNumber, cardExpYear, cardExpMonth, cardCVC);
+    if (!token.status) return res.status(400).json(token.data);
+    const card = await payment.addCustomerCard(token, customerId);
+    if (!card.status) return res.status(400).json(card.data);
+  } catch (err) {
+    return res.status(503).json({ message: 'Service unavailable' });
+  }
+  return res.status(201).json({ message: 'Card added successfully' });
+};
+
+module.exports.addCustomerCard = [auth.authentication, auth.authorizationCompany, addCustomerCard];
+
+const removeCustomerCard = async (req, res) => {
+  let removedCard;
+  const { cardFranchise, cardToken } = req.body;
+  try {
+    removedCard = await payment.removeCustomerCard(cardFranchise, cardToken, req.params.customerId);
+    if (!removedCard.status) return res.status(404).json({ message: 'Customer not found' });
+  } catch (error) {
+    return res.status(503).json({ message: 'Service unavailable' });
+  }
+  return res.status(200).json({ message: 'Card successfully removed' });
+};
+
+module.exports.removeCustomerCard = [
+  auth.authentication,
+  auth.authorizationCompany,
+  removeCustomerCard,
+];
