@@ -1,6 +1,6 @@
 const mongoose = require('../config/config.database');
 
-const { Establishment, Client } = require('../models/entity.model');
+const { Establishment, Client, Company } = require('../models/entity.model');
 const validation = require('../middlewares/validations/validation');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 const calculation = require('../utilities/calculations');
@@ -44,3 +44,32 @@ module.exports.postReviewEstablishment = [
   validation(establishmentReview),
   postReviewEstablishment,
 ];
+
+const getEstablishmentLandingPage = async (req, res) => {
+  let establishments;
+  try {
+    establishments = await Company.aggregate([
+      { $unwind: '$establishments' },
+      { $match: { 'establishments.isActive': true } },
+      { $project: { establishments: 1 } },
+      {
+        $facet: {
+          metadata: [{ $count: 'Establishments' }],
+          data: [{ $limit: 10 }],
+        },
+      },
+    ]);
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+    return res.status(500).json({ message: `Internal server error` });
+  }
+
+  return res.status(200).json({ establishments });
+};
+
+module.exports.getEstablishmentLandingPage = [getEstablishmentLandingPage];
