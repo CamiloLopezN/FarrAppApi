@@ -48,6 +48,7 @@ const postCustomer = async (req, res) => {
   let customer;
   try {
     const token = await createToken(cardNumber, cardExpYear, cardExpMonth, cardCVC);
+    if (!token.status) return res.status(400).json(token.data);
     customer = await createCustomer(
       token.id,
       firstName,
@@ -59,6 +60,7 @@ const postCustomer = async (req, res) => {
       phone,
       cellPhone,
     );
+    if (!customer.status) return res.status(400).json(customer.data);
     await Company.findOneAndUpdate(
       { _id: req.payload.roleId },
       { customerId: customer.data.customerId },
