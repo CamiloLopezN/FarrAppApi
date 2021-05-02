@@ -17,5 +17,6 @@ router.post(
   userController.reqDeactiveUser,
 );
 router.post('/recover-password', validator(email), userController.recoverPassword);
+router.get('/verify-account/:token', userController.verifyAccount);
 
 module.exports = router;
