@@ -9,10 +9,16 @@ const {
   getPlans,
   postSubscription,
   getCancelSubscription,
+  changeDefaultCard,
+  addCustomerCard,
+  removeCustomerCard,
 } = require('../controllers/payments.controller');
 
 router.post('/credit-token', postToken);
 router.get('/customers', listCustomers);
+router.post('/customers/:customerId/cards', addCustomerCard);
+router.delete('/customers/:customerId/cards', removeCustomerCard);
+router.post('/customers/:customerId/default-card', changeDefaultCard);
 router.get('/customers/:customerId', getCustomer);
 router.post('/customers', postCompanyCustomer);
 router.post('/customers/subscriptions', postSubscription);

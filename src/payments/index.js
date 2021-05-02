@@ -5,14 +5,13 @@ const epayco = require('epayco-sdk-node')({
   test: true,
 });
 
-module.exports.createToken = (cardNumber, cardExpYear, cardExpMonth, cardCVC) => {
-  return epayco.token.create({
+module.exports.createToken = (cardNumber, cardExpYear, cardExpMonth, cardCVC) =>
+  epayco.token.create({
     'card[number]': cardNumber,
     'card[exp_year]': cardExpYear,
     'card[exp_month]': cardExpMonth,
     'card[cvc]': cardCVC,
   });
-};
 
 module.exports.createCustomer = (
   cardToken,
@@ -24,8 +23,8 @@ module.exports.createCustomer = (
   address,
   phone,
   cellPhone,
-) => {
-  return epayco.customers.create({
+) =>
+  epayco.customers.create({
     token_card: cardToken,
     name: firstName,
     last_name: lastName,
@@ -38,30 +37,42 @@ module.exports.createCustomer = (
     phone,
     cell_phone: cellPhone,
   });
-};
 
-module.exports.listCustomers = () => {
-  return epayco.customers.list();
-};
+module.exports.listCustomers = () => epayco.customers.list();
 
-module.exports.listPlans = () => {
-  return epayco.plans.list();
-};
+module.exports.listPlans = () => epayco.plans.list();
 
-module.exports.getCustomerById = (customerId) => {
-  return epayco.customers.get(customerId);
-};
+module.exports.getCustomerById = (customerId) => epayco.customers.get(customerId);
 
-module.exports.subscribeCustomer = (planId, customerId, cardToken, docType, docNumber) => {
-  return epayco.subscriptions.create({
+module.exports.subscribeCustomer = (planId, customerId, cardToken, docType, docNumber) =>
+  epayco.subscriptions.create({
     id_plan: planId,
     customer: customerId,
     token_card: cardToken,
     doc_type: docType,
     doc_number: docNumber,
   });
-};
 
-module.exports.cancelSubscriptionToPlan = (subscriptionId) => {
-  return epayco.subscriptions.cancel(subscriptionId);
-};
+module.exports.cancelSubscriptionToPlan = (subscriptionId) =>
+  epayco.subscriptions.cancel(subscriptionId);
+
+module.exports.changeDefaultCard = (cardFranchise, cardToken, cardMask, customerId) =>
+  epayco.customers.addDefaultCard({
+    franchise: cardFranchise,
+    token: cardToken,
+    mask: cardMask,
+    customer_id: customerId,
+  });
+
+module.exports.addCustomerCard = (cardToken, customerId) =>
+  epayco.customers.addNewToken({
+    token_card: cardToken,
+    customer_id: customerId,
+  });
+
+module.exports.removeCustomerCard = (cardFranchise, cardMask, customerId) =>
+  epayco.customers.delete({
+    franchise: cardFranchise,
+    mask: cardMask,
+    customer_id: customerId,
+  });
