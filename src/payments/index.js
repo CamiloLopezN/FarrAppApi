@@ -65,3 +65,18 @@ module.exports.subscribeCustomer = (planId, customerId, cardToken, docType, docN
 module.exports.cancelSubscriptionToPlan = (subscriptionId) => {
   return epayco.subscriptions.cancel(subscriptionId);
 };
+
+module.exports.changeDefaultCard = (cardFranchise, cardToken, cardMask, customerId) => {
+  return epayco.customers.addDefaultCard({
+    franchise: cardFranchise,
+    token: cardToken,
+    mask: cardMask,
+    customer_id: customerId,
+  });
+};
+
+module.exports.addCard = (cardToken, customerId) =>
+  epayco.customers.addNewToken({
+    token_card: cardToken,
+    customer_id: customerId,
+  });
