@@ -7,6 +7,7 @@ const config = {
 };
 
 module.exports.authentication = async (req, res, next) => {
+  if (!req.headers.authorization) return next();
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Unauthorized access' });
