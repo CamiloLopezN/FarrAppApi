@@ -79,7 +79,7 @@ const postCustomer = async (req, res) => {
   });
 };
 
-module.exports.postCompanyCustomer = [authorize(roles.company, roles.admin), postCustomer];
+module.exports.postCompanyCustomer = [authorize([roles.company, roles.admin]), postCustomer];
 
 const subscribeToPlan = async (req, res) => {
   const { planId, customerId, cardToken, docType, docNumber } = req.body;
