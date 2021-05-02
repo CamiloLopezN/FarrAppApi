@@ -10,6 +10,7 @@ const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const calculation = require('../utilities/calculations');
+const { sendAccountValidator } = require('./utils');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
@@ -18,7 +19,7 @@ const postClient = async (req, res) => {
     password,
     role: roles.client,
     hasReqDeactivation: false,
-    isActive: false,
+    isActive: true,
     isVerified: false,
   });
   user.password = await user.encryptPassword(password || generatePasswordRand(8, 'alf'));
@@ -35,24 +36,24 @@ const postClient = async (req, res) => {
   });
 
   try {
-    const foundClient = await User.findOne({ email });
-    if (foundClient) {
-      // TODO resend verification mail
-      return res.status(200).json({
-        message: 'Successful operation!',
-      });
-    }
-
     await client.save();
     await user.save();
+
+    const payload = {
+      email,
+      username: firstName,
+    };
+    sendAccountValidator(payload, `${req.protocol}://${req.headers.host}/api/users/verify-account`);
   } catch (error) {
     // eslint-disable-next-line no-underscore-dangle
     await User.deleteOne({ _id: user._id });
     // eslint-disable-next-line no-underscore-dangle
     await Client.deleteOne({ _id: client._id });
     if (error instanceof mongoose.Error.ValidationError)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-    return res.status(500).json({ message: 'Internal server error' });
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
+    return res.status(500).json({ message: 'Internal server error', error });
   }
   return res.status(201).json({
     message: 'Successful operation',
