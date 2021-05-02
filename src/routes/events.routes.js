@@ -1,9 +1,9 @@
 const express = require('express');
 
 const router = express.Router();
-const controllerEvents = require('../controllers/events.controller');
+const { getEventsLandingPage, postReviewEvent } = require('../controllers/events.controller');
 
-router.get('/', controllerEvents.getEventsLandingPage);
-router.post('/:eventId/review', controllerEvents.postReviewEvent);
+router.get('/', getEventsLandingPage);
+router.post('/:eventId/review', postReviewEvent);
 
 module.exports = router;

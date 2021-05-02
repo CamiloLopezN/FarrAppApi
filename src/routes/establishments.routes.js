@@ -1,9 +1,12 @@
 const express = require('express');
 
 const router = express.Router();
-const controllerEst = require('../controllers/establishments.controller');
+const {
+  postReviewEstablishment,
+  getEstablishmentLandingPage,
+} = require('../controllers/establishments.controller');
 
-router.post('/:establishmentId/review', controllerEst.postReviewEstablishment);
-router.get('/', controllerEst.getEstablishmentLandingPage);
+router.post('/:establishmentId/review', postReviewEstablishment);
+router.get('/', getEstablishmentLandingPage);
 
 module.exports = router;
