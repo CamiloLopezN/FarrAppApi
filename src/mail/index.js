@@ -55,7 +55,7 @@ function sendExpectVerifyCompany(userMail, companyName) {
   sendMail(userMail, subject, text, html);
 }
 
-function sendExpectCreateUserByAdmin(userMail, userName, generatedPassword) {
+function sendCreatedUserByAdmin(userMail, userName, generatedPassword) {
   const subject = `Solicitud de registro en FarrApp`;
   const text =
     `Hola, ${userName}. ` +
@@ -84,6 +84,6 @@ function sendRecoverPassword(userMail, tempPassword) {
 module.exports = {
   sendValidation,
   sendExpectVerifyCompany,
-  sendExpectCreateUserByAdmin,
+  sendCreatedUserByAdmin,
   sendRecoverPassword,
 };

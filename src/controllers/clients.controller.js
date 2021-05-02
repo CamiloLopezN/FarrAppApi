@@ -10,7 +10,7 @@ const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const calculation = require('../utilities/calculations');
-const { sendAccountValidator, sendExpectCreateUserByAdmin } = require('./utils');
+const { sendAccountValidator, sendCreatedUserByAdmin } = require('./utils');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
@@ -51,7 +51,7 @@ const postClient = async (req, res) => {
     );
 
     if (!password) {
-      sendExpectCreateUserByAdmin(email, firstName, passwordAux);
+      sendCreatedUserByAdmin(email, firstName, passwordAux);
     }
   } catch (error) {
     // eslint-disable-next-line no-underscore-dangle
@@ -62,7 +62,7 @@ const postClient = async (req, res) => {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Internal server error', error });
   }
   return res.status(200).json({
     message: 'Successful operation',
