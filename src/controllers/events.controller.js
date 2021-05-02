@@ -1,23 +1,25 @@
 const mongoose = require('mongoose');
-const { Event, Client } = require('../models/entity.model');
+const { Company, Client, Event } = require('../models/entity.model');
 const calculation = require('../utilities/calculations');
 const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
 const validation = require('../middlewares/validations/validation');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 
-module.exports.getAllEvents = async (req, res) => {
+module.exports.getEventsLandingPage = async (req, res) => {
   let events;
-  const projection = {
-    _id: 1,
-    eventName: 1,
-    'location.city': 1,
-    start: 1,
-    end: 1,
-    photoUrls: 1,
-    status: 1,
-  };
   try {
-    events = await Event.find({ status: 'Activo' }, projection).orFail();
+    events = await Company.aggregate([
+      { $unwind: '$events' },
+      { $match: { 'events.status': 'Activo' } },
+      { $sort: { 'events.start': 1 } },
+      { $project: { events: 1 } },
+      {
+        $facet: {
+          metadata: [{ $count: 'Events' }],
+          data: [{ $limit: 10 }],
+        },
+      },
+    ]);
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
