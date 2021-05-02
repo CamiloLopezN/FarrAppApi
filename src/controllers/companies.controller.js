@@ -16,6 +16,8 @@ const {
   authorizationAdminOrCompany,
   authenticationOrPublic,
 } = require('../middlewares/oauth/authentication');
+const Mailer = require('../mail/index');
+const Utils = require('./utils');
 
 /*
 Registrar una compañia
@@ -54,6 +56,15 @@ async function signUp(req, res) {
       await company
         .save()
         .then(() => {
+          Mailer.sendExpectVerifyCompany(email, companyName);
+          const payload = {
+            email,
+            companyName,
+          };
+          Utils.sendAccountValidator(
+            payload,
+            `${req.protocol}://${req.headers.host}/api/users/verify-account`,
+          );
           return res.status(200).json({ message: 'Successful registration' });
         })
         .catch(async (err) => {
