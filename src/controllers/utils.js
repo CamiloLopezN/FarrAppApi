@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken');
-const { sendValidation, sendRecoverPassword } = require('../mail/index');
+const {
+  sendValidation,
+  sendRecoverPassword,
+  sendExpectCreateUserByAdmin,
+} = require('../mail/index');
 
 const privateKey = process.env.JWT_KEY;
 
@@ -12,4 +16,8 @@ module.exports.sendAccountValidator = (user, validationURL) => {
 
 module.exports.sendRecoverPassword = (email, tempPassword) => {
   sendRecoverPassword(email, tempPassword);
+};
+
+module.exports.sendExpectCreateUserByAdmin = (userMail, userName, generatedPassword) => {
+  sendExpectCreateUserByAdmin(userMail, userName, generatedPassword);
 };
