@@ -5,7 +5,7 @@ const { authentication, authorizationClient } = require('../middlewares/oauth/au
 const validation = require('../middlewares/validations/validation');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 
-module.exports.getEventsLandingPage = async (req, res) => {
+const getEventsLandingPage = async (req, res) => {
   let events;
   try {
     events = await Company.aggregate([
@@ -27,11 +27,13 @@ module.exports.getEventsLandingPage = async (req, res) => {
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Resource not found' });
-    return res.status(500).json({ message: `Internal server error`, err });
+    return res.status(500).json({ message: `Internal server error` });
   }
 
-  return res.status(200).json({ message: events });
+  return res.status(200).json({ events });
 };
+
+module.exports.getEventsLandingPage = [getEventsLandingPage];
 
 const postReviewEvent = async (req, res) => {
   const clientId = req.id;
