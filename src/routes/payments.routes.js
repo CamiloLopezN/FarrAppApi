@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const {
   postToken,
-  getCustomers,
+  listCustomers,
   getCustomer,
   postCompanyCustomer,
   getPlans,
@@ -12,7 +12,7 @@ const {
 } = require('../controllers/payments.controller');
 
 router.post('/credit-token', postToken);
-router.get('/customers', getCustomers);
+router.get('/customers', listCustomers);
 router.get('/customers/:customerId', getCustomer);
 router.post('/customers', postCompanyCustomer);
 router.post('/customers/subscriptions', postSubscription);
