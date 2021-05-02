@@ -8,6 +8,7 @@ const { postClientVal, updateClientVal } = require('../middlewares/validations/c
 const { establishmentId } = require('../middlewares/validations/establishment.joi');
 const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
+const { authorize } = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const calculation = require('../utilities/calculations');
 const { sendAccountValidator, sendCreatedUserByAdmin } = require('./utils');
@@ -22,6 +23,9 @@ const postClient = async (req, res) => {
     isActive: true,
     isVerified: false,
   });
+
+  if (!password && !req.payload) return res.status(403).json({ message: 'Forbidden' });
+
   const passwordAux = password || generatePasswordRand(8, 'alf');
   user.password = await user.encryptPassword(passwordAux);
 
@@ -68,7 +72,12 @@ const postClient = async (req, res) => {
     message: 'Successful operation',
   });
 };
-module.exports.postClient = [validation(postClientVal), validatePass, postClient];
+module.exports.postClient = [
+  authorize([roles.guest, roles.admin]),
+  validation(postClientVal),
+  validatePass,
+  postClient,
+];
 
 const updateClientProfile = async (req, res) => {
   const { clientId } = req.params;
