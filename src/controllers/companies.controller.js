@@ -115,10 +115,11 @@ Un usuario admin o company con los permisos solicita toda la información de un 
  */
 async function getCompanyById(req, res) {
   const { companyId } = req.params;
-  const id = authorizationAdminOrCompany(req, res, companyId);
+  if (req.payload.role === roles.company && req.payload.roleId !== companyId)
+    return res.status(401).json({ message: 'Unauthorized' });
 
   try {
-    const doc = await Company.findOne({ _id: id }, { __v: 0 });
+    const doc = await Company.findOne({ _id: companyId }, { __v: 0 });
     if (!doc) return res.status(404).json({ message: 'Resource not found' });
 
     return res.status(200).json({ message: doc });
@@ -131,7 +132,7 @@ async function getCompanyById(req, res) {
   }
 }
 
-module.exports.profile = [authentication, getCompanyById];
+module.exports.profile = [authorize([roles.company, roles.admin]), getCompanyById];
 
 /*
 Actualizar la información del perfil
