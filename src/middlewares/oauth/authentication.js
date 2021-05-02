@@ -23,6 +23,7 @@ module.exports.authentication = async (req, res, next) => {
   return next();
 };
 
+// TODO REEMPLAZAR EN MÉTODOS Y BORRAR
 module.exports.authenticationOrPublic = async (req, res, next) => {
   if (req.headers.authorization) {
     const authHeader = req.headers.authorization;
@@ -60,6 +61,7 @@ module.exports.authorizationAdmin = async (req, res, next) => {
   return next();
 };
 
+// TODO REEMPLAZAR EN MÉTODOS Y BORRAR
 module.exports.authorizationClient = async (req, res, next) => {
   const { payload } = req;
   if (!payload.role === roles.client) return res.status(403).json({ message: 'Forbidden' });
@@ -67,6 +69,7 @@ module.exports.authorizationClient = async (req, res, next) => {
   return next();
 };
 
+// TODO REEMPLAZAR EN MÉTODOS Y BORRAR
 module.exports.authorizationCompany = async (req, res, next) => {
   const { payload } = req;
   if (!payload.role === roles.company) return res.status(403).json({ message: 'Forbidden' });
@@ -74,6 +77,7 @@ module.exports.authorizationCompany = async (req, res, next) => {
   return next();
 };
 
+// TODO REEMPLAZAR EN MÉTODOS Y BORRAR
 module.exports.authorizationAdminOrCompany = (req, res, param) => {
   let id;
   if (req.payload.role === roles.admin) {
@@ -88,6 +92,7 @@ module.exports.authorizationAdminOrCompany = (req, res, param) => {
   return id;
 };
 
+// TODO REEMPLAZAR EN MÉTODOS Y BORRAR
 module.exports.authorizationAdminOrClient = (req, res, param) => {
   let id;
   if (req.payload.role === roles.admin) {
