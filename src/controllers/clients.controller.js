@@ -10,7 +10,7 @@ const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const calculation = require('../utilities/calculations');
-const { sendAccountValidator } = require('./utils');
+const { sendAccountValidator, sendExpectCreateUserByAdmin } = require('./utils');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
@@ -22,7 +22,8 @@ const postClient = async (req, res) => {
     isActive: true,
     isVerified: false,
   });
-  user.password = await user.encryptPassword(password || generatePasswordRand(8, 'alf'));
+  const passwordAux = password || generatePasswordRand(8, 'alf');
+  user.password = await user.encryptPassword(passwordAux);
 
   const month = birthdate.split('-')[1] - 1;
   const myDate = new Date(birthdate.split('-')[0], month, birthdate.split('-')[2]);
@@ -48,6 +49,10 @@ const postClient = async (req, res) => {
       },
       `${req.protocol}://${req.headers.host}/api/users/verify-account`,
     );
+
+    if (!password) {
+      sendExpectCreateUserByAdmin(email, firstName, passwordAux);
+    }
   } catch (error) {
     // eslint-disable-next-line no-underscore-dangle
     await User.deleteOne({ _id: user._id });
