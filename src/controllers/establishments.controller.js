@@ -10,6 +10,8 @@ const postReviewEstablishment = async (req, res) => {
   const clientId = req.id;
   const { establishmentId } = req.params;
   let estReview;
+  let createdReview;
+  let updatedEstab;
   try {
     const client = await Client.findOne({ _id: clientId }).orFail();
     estReview = {
@@ -19,11 +21,14 @@ const postReviewEstablishment = async (req, res) => {
       rating: req.body.rating,
       title: req.body.title,
     };
-    await Establishment.updateOne(
+    updatedEstab = await Establishment.findOneAndUpdate(
       { _id: establishmentId },
       { $push: { reviews: estReview } },
+      { new: true },
     ).orFail();
+    createdReview = updatedEstab.reviews.pop();
     await calculation.calculateAvgRatingEstablishment(establishmentId);
+    updatedEstab = await Establishment.findOne({ _id: establishmentId }).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
@@ -31,7 +36,7 @@ const postReviewEstablishment = async (req, res) => {
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     return res.status(500).json({ message: 'Internal server error' });
   }
-  return res.status(201).json({ estReview });
+  return res.status(201).json({ createdReview, averageRating: updatedEstab.averageRating });
 };
 module.exports.postReviewEstablishment = [
   authentication,
