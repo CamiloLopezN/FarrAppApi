@@ -1,5 +1,3 @@
-const oauth = {};
-
 const jwt = require('jsonwebtoken');
 const roles = require('./roles');
 
@@ -24,7 +22,7 @@ module.exports.authentication = async (req, res, next) => {
   return next();
 };
 
-oauth.authenticationOrPublic = async (req, res, next) => {
+module.exports.authenticationOrPublic = async (req, res, next) => {
   if (req.headers.authorization) {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -41,28 +39,28 @@ oauth.authenticationOrPublic = async (req, res, next) => {
   return next();
 };
 
-oauth.authorizationAdmin = async (req, res, next) => {
+module.exports.authorizationAdmin = async (req, res, next) => {
   const { payload } = req;
   if (!payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
   req.id = payload.roleId;
   return next();
 };
 
-oauth.authorizationClient = async (req, res, next) => {
+module.exports.authorizationClient = async (req, res, next) => {
   const { payload } = req;
   if (!payload.role === roles.client) return res.status(403).json({ message: 'Forbidden' });
   req.id = payload.roleId;
   return next();
 };
 
-oauth.authorizationCompany = async (req, res, next) => {
+module.exports.authorizationCompany = async (req, res, next) => {
   const { payload } = req;
   if (!payload.role === roles.company) return res.status(403).json({ message: 'Forbidden' });
   req.id = payload.roleId;
   return next();
 };
 
-oauth.authorizationAdminOrCompany = (req, res, param) => {
+module.exports.authorizationAdminOrCompany = (req, res, param) => {
   let id;
   if (req.payload.role === roles.admin) {
     id = param;
@@ -76,7 +74,7 @@ oauth.authorizationAdminOrCompany = (req, res, param) => {
   return id;
 };
 
-oauth.authorizationAdminOrClient = (req, res, param) => {
+module.exports.authorizationAdminOrClient = (req, res, param) => {
   let id;
   if (req.payload.role === roles.admin) {
     id = param;
@@ -90,10 +88,8 @@ oauth.authorizationAdminOrClient = (req, res, param) => {
   return id;
 };
 
-oauth.generateToken = (payload) => {
+module.exports.generateToken = (payload) => {
   return jwt.sign(payload, config.secretKey, {
     expiresIn: config.expiresSessionIn,
   });
 };
-
-module.exports = oauth;
