@@ -39,6 +39,19 @@ module.exports.authenticationOrPublic = async (req, res, next) => {
   return next();
 };
 
+module.exports.authorize = (authorizedRoles) => {
+  return async (req, res, next) => {
+    let payloadRole;
+    if (!req.payload) payloadRole = 'guest';
+    else payloadRole = req.payload.role;
+
+    if (!authorizedRoles.includes(payloadRole))
+      return res.status(403).json({ message: 'Forbidden' });
+    return next();
+  };
+};
+
+// TODO REEMPLAZAR EN MÉTODOS Y BORRAR
 module.exports.authorizationAdmin = async (req, res, next) => {
   const { payload } = req;
   if (!payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
