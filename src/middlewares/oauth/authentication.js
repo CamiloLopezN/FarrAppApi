@@ -8,17 +8,20 @@ const config = {
   secretKey: process.env.JWT_KEY,
 };
 
-oauth.authentication = async (req, res, next) => {
+module.exports.authentication = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Unauthorized access' }); // if there isn't any token
-
-  await jwt.verify(token, config.secretKey, (err, payload) => {
-    if (err) return res.status(403).json({ message: 'Invalid Token' });
-    req.payload = payload;
-    return next();
-  });
-  return true;
+  if (!token) return res.status(401).json({ message: 'Unauthorized access' });
+  try {
+    req.payload = await jwt.verify(token, config.secretKey);
+  } catch (e) {
+    if (e instanceof jwt.JsonWebTokenError)
+      return res.status(403).json({ message: 'Invalid Token' });
+    if (e instanceof jwt.TokenExpiredError)
+      return res.status(403).json({ message: 'Token Expired' });
+    return res.status(503).json({ message: 'Internal server error' });
+  }
+  return next();
 };
 
 oauth.authenticationOrPublic = async (req, res, next) => {
