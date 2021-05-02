@@ -30,7 +30,7 @@ const getEventsLandingPage = async (req, res) => {
     return res.status(500).json({ message: `Internal server error` });
   }
 
-  return res.status(200).json({ events });
+  return res.status(200).json(events);
 };
 
 module.exports.getEventsLandingPage = [getEventsLandingPage];

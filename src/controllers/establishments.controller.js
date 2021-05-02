@@ -69,7 +69,7 @@ const getEstablishmentLandingPage = async (req, res) => {
     return res.status(500).json({ message: `Internal server error` });
   }
 
-  return res.status(200).json({ establishments });
+  return res.status(200).json(establishments);
 };
 
 module.exports.getEstablishmentLandingPage = [getEstablishmentLandingPage];
