@@ -128,26 +128,25 @@ module.exports.recoverPassword = async (req, res) => {
 module.exports.verifyAccount = async (req, res) => {
   const { token } = req.params;
   if (!token || !req.params) return res.status(403).send({ message: 'Forbidden' });
-
-  const email = await jwt.verify(token, process.env.JWT_KEY, async (err, payload) => {
-    if (err) return res.status(403).json({ message: 'Invalid Token' });
-    return payload.email;
-  });
-
   try {
-    const user = await User.findOne({ email }).orFail();
+    const payload = await jwt.verify(token, process.env.JWT_KEY);
     const data = { isVerified: true };
-    if (user.role !== roles.company) {
-      data.isActive = true;
-    }
-    await User.findOneAndUpdate({ email }, { $set: data }).orFail();
+    await User.findOneAndUpdate({ email: payload.email }, { $set: data }).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Resource not found' });
+
+    if (err instanceof jwt.JsonWebTokenError)
+      return res.status(403).json({ message: 'Invalid Token' });
+
+    if (err instanceof jwt.TokenExpiredError)
+      return res.status(403).json({ message: 'Token Expired' });
+
     return res.status(500).json({ message: `Internal server error` });
   }
 
