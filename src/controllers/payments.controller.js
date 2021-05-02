@@ -45,7 +45,10 @@ const postCustomer = async (req, res) => {
     cardExpMonth,
     cardCVC,
     isDefaultCard,
+    companyId,
   } = req.body;
+  if (req.payload.role === roles.company && req.payload.roleId !== companyId)
+    return res.status(403).json({ message: 'Forbidden' });
   let customer;
   try {
     const token = await createToken(cardNumber, cardExpYear, cardExpMonth, cardCVC);
@@ -63,7 +66,7 @@ const postCustomer = async (req, res) => {
     );
     if (!customer.status) return res.status(400).json(customer.data);
     await Company.findOneAndUpdate(
-      { _id: req.payload.roleId },
+      { _id: companyId },
       { customerId: customer.data.customerId },
     ).orFail();
   } catch (error) {
@@ -76,7 +79,7 @@ const postCustomer = async (req, res) => {
   });
 };
 
-module.exports.postCompanyCustomer = [auth.authentication, auth.authorizationCompany, postCustomer];
+module.exports.postCompanyCustomer = [authorize(roles.company, roles.admin), postCustomer];
 
 const subscribeToPlan = async (req, res) => {
   const { planId, customerId, cardToken, docType, docNumber } = req.body;
