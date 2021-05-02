@@ -15,12 +15,18 @@ module.exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).send({ message: 'Incomplete or bad formatted data' });
 
-    if (!user.isVerified) {
+    if (!user.isActive) {
       return res.status(403).send({ message: 'Forbidden' });
     }
 
     if (!(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res
+        .status(401)
+        .json({ message: 'Wrong or no authentication email/password provided' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).send({ message: 'Email is not verified' });
     }
 
     if (user.role === roles.company) {
