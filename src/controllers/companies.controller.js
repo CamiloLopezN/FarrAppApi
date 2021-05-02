@@ -160,6 +160,7 @@ async function registerEstablishment(req, res) {
   const { companyId } = req.params;
   if (companyId && companyId !== req.id)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  let establishmentId;
   try {
     const establishment = new Establishment(req.body);
     const company = await Company.findOne({ _id: req.id }, { _id: 1, companyName: 1 }).orFail();
@@ -171,7 +172,7 @@ async function registerEstablishment(req, res) {
       companyName: company.companyName,
     };
     const establishmentSaved = await establishment.save();
-    const reviewEstablishment = {
+    const previewEstablishment = {
       // eslint-disable-next-line no-underscore-dangle
       establishmentId: establishmentSaved._id,
       companyId,
@@ -181,7 +182,11 @@ async function registerEstablishment(req, res) {
       isActive: establishmentSaved.isActive,
     };
 
-    await Company.updateOne({ _id: companyId }, { $push: { establishments: reviewEstablishment } });
+    await Company.updateOne(
+      { _id: companyId },
+      { $push: { establishments: previewEstablishment } },
+    );
+    establishmentId = previewEstablishment.establishmentId;
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
@@ -189,7 +194,7 @@ async function registerEstablishment(req, res) {
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
     return res.status(500).json({ message: `Internal server error` });
   }
-  return res.status(200).json({ message: 'Successful registration' });
+  return res.status(200).json({ message: 'Successful registration', establishmentId });
 }
 
 module.exports.registerEstablishment = [
