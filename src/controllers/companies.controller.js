@@ -369,7 +369,7 @@ async function registerEvent(req, res) {
   if (!companyId || !establishmentId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
   if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
-
+  let eventId;
   try {
     const establishmentSearch = await Establishment.findOne(
       { _id: establishmentId },
@@ -404,6 +404,7 @@ async function registerEvent(req, res) {
       { $push: { events: eventPreview } },
     ).orFail();
     await Company.updateOne({ _id: companyId }, { $push: { events: eventPreview } }).orFail();
+    eventId = eventPreview.eventId;
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
@@ -413,7 +414,7 @@ async function registerEvent(req, res) {
       return res.status(404).json({ message: 'Resource not found' });
     return res.status(500).json({ message: `Internal server error` });
   }
-  return res.status(200).json({ message: 'Successful registration' });
+  return res.status(200).json({ message: 'Successful registration', eventId });
 }
 
 module.exports.registerEvent = [
