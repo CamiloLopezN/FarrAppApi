@@ -10,6 +10,8 @@ const {
 const payment = require('../payments/index');
 const { Company } = require('../models/entity.model');
 
+const tax = 0.19;
+
 module.exports.postToken = (req, res) => {
   const { number, expYear, expMonth, cvc } = req.body;
   createToken(number, expYear, expMonth, cvc, (error, token) => {
@@ -21,10 +23,12 @@ module.exports.postToken = (req, res) => {
   });
 };
 
-module.exports.getCustomers = (req, res) => {
-  listCustomers();
-  return res.status(200);
+const getCustomers = async (req, res) => {
+  const customers = await listCustomers();
+  return res.status(200).json(customers);
 };
+
+module.exports.listCustomers = [auth.authentication, auth.authorizationAdmin, getCustomers];
 
 const postCustomer = async (req, res) => {
   const {
@@ -104,12 +108,23 @@ module.exports.getCancelSubscription = [
 
 module.exports.getPlans = async (req, res) => {
   let plans;
+  let treatedPlans;
   try {
     plans = await listPlans();
+    treatedPlans = plans.data.map((plan) => ({
+      planId: plan.id_plan,
+      planName: plan.description,
+      price: plan.amount + plan.amount * tax,
+      intervalCount: plan.interval_count,
+      intervalUnit: plan.interval,
+      trialDays: plan.trial_days,
+      taxBase: plan.amount,
+      tax: plan.amount * tax,
+    }));
   } catch (error) {
     return res.status(503).json({ message: 'Service unavailable' });
   }
-  return res.status(200).json(plans);
+  return res.status(200).json(treatedPlans);
 };
 
 const getCustomerById = async (req, res) => {
