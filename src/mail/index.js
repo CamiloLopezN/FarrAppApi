@@ -30,13 +30,13 @@ const sendMail = (toMail, subject, text, html) => {
 function sendValidation(userMail, token, validationURL) {
   const subject = `Valida tu cuenta en FarrApp`;
   const text = `Gracias por registrarte en FarrApp.\n Para validar tu cuenta, ingresa al siguiente enlace:\n ${validationURL}${token}`;
-  const url = `${validationURL}/?token=${token}`;
+  const url = `${validationURL}/${token}`;
   const html = `<html>
        <body>
            <p>¡Gracias por registrarte en FarrApp!<br>
                Para validar tu cuenta, ingresa al siguiente enlace:<br>
            </p>
-           <a href="http://${url}">Validar cuenta</a>
+           <a href=${url}>Validar cuenta</a>
        </body>
        </html>`;
   sendMail(userMail, subject, text, html);
