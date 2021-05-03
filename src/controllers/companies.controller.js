@@ -337,8 +337,7 @@ module.exports.updateEstablishmentById = [
 
 async function deleteEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
-  if (companyId !== req.id)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
     const events = await Event.find({
@@ -390,15 +389,10 @@ async function deleteEstablishmentById(req, res) {
 
     return res.status(500).json({ message: `Internal server error`, err });
   }
-
   return res.status(200).json({ message: 'Deleted establishment' });
 }
 
-module.exports.deleteEstablishmentById = [
-  authentication,
-  authorizationCompany,
-  deleteEstablishmentById,
-];
+module.exports.deleteEstablishmentById = [authorize([roles.company]), deleteEstablishmentById];
 
 async function registerEvent(req, res) {
   const { companyId, establishmentId } = req.params;
