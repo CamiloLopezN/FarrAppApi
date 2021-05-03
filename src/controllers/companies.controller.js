@@ -236,11 +236,12 @@ module.exports.registerEstablishment = [
 
 async function getPreviewEstablishmentsOfCompany(req, res) {
   const { companyId } = req.params;
-  const id = authorizationAdminOrCompany(req, res, companyId);
+  if (req.payload.role === roles.company && req.payload.roleId !== companyId)
+    return res.status(401).json({ message: 'Unauthorized' });
   let establishments;
 
   try {
-    establishments = await Company.findOne({ _id: id }, { establishments: 1, _id: 0 });
+    establishments = await Company.findOne({ _id: companyId }, { establishments: 1, _id: 0 });
     if (!establishments) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
@@ -253,7 +254,7 @@ async function getPreviewEstablishmentsOfCompany(req, res) {
 }
 
 module.exports.getPreviewEstablishmentsOfCompany = [
-  authentication,
+  authorize([roles.company, roles.admin]),
   getPreviewEstablishmentsOfCompany,
 ];
 
