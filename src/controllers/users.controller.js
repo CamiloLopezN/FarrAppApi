@@ -7,6 +7,7 @@ const roles = require('../middlewares/oauth/roles');
 const utils = require('./utils');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const { authorize } = require('../middlewares/oauth/authentication');
+const { validatePass } = require('./password.controller');
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -198,3 +199,28 @@ const getUsers = async (req, res) => {
   return res.status(200).json(users);
 };
 module.exports.getUsers = [authorize([roles.admin]), getUsers];
+
+const updateUser = async (req, res) => {
+  const { userId } = req.params;
+  const { email, password } = req.body;
+  if (req.payload.role !== roles.admin && req.payload.userId !== userId)
+    return res.status(403).json({ message: 'Forbidden' });
+  try {
+    const user = await User.findOne({ _id: userId }).orFail();
+    const pass = await user.encryptPassword(password);
+    const data = { $set: { email, password: pass } };
+    await User.updateOne({ _id: userId }, data);
+  } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Not found resource' });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
+};
+module.exports.updateUser = [
+  authorize([roles.admin, roles.company, roles.client]),
+  validatePass,
+  updateUser,
+];
