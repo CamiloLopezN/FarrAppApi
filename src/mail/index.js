@@ -29,14 +29,17 @@ const sendMail = (toMail, subject, text, html) => {
 
 function sendValidation(userMail, token, validationURL) {
   const subject = `Valida tu cuenta en FarrApp`;
-  const text = `Gracias por registrarte en FarrApp.\n Para validar tu cuenta, ingresa al siguiente enlace:\n ${validationURL}${token}`;
+  const text = `Se ha registrado una cuenta de FarrApp con este correo.\n Para validar tu cuenta, ingresa al siguiente enlace:\n ${validationURL}${token} \n  Si no fuiste tú ignora este correo`;
   const url = `${validationURL}/${token}`;
   const html = `<html>
        <body>
-           <p>¡Gracias por registrarte en FarrApp!<br>
+           <p>Se ha registrado una cuenta de FarrApp con este correo.<br>
                Para validar tu cuenta, ingresa al siguiente enlace:<br>
            </p>
            <a href=${url}>Validar cuenta</a>
+           <p>
+           Si no fuiste tú ignora este correo
+           </p>
        </body>
        </html>`;
   sendMail(userMail, subject, text, html);
@@ -52,7 +55,7 @@ function sendExpectVerifyCompany(userMail, companyName) {
   sendMail(userMail, subject, text, html);
 }
 
-function sendExpectCreateUserByAdmin(userMail, userName, generatedPassword) {
+function sendCreatedUserByAdmin(userMail, userName, generatedPassword) {
   const subject = `Solicitud de registro en FarrApp`;
   const text =
     `Hola, ${userName}. ` +
@@ -81,6 +84,6 @@ function sendRecoverPassword(userMail, tempPassword) {
 module.exports = {
   sendValidation,
   sendExpectVerifyCompany,
-  sendExpectCreateUserByAdmin,
+  sendCreatedUserByAdmin,
   sendRecoverPassword,
 };
