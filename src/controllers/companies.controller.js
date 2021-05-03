@@ -533,7 +533,7 @@ async function updateEvent(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
   if (!companyId || !establishmentId || !eventId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+  if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
     const establishment = await Establishment.findOne({
@@ -548,7 +548,9 @@ async function updateEvent(req, res) {
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
 
     const { body } = req;
-    body.status = body.status[0].toUpperCase() + body.status.slice(1);
+    if (body.status) {
+      body.status = body.status[0].toUpperCase() + body.status.slice(1);
+    }
     const data = {
       $set: body,
     };
@@ -609,6 +611,8 @@ async function updateEvent(req, res) {
   return res.status(200).json({ message: 'Update complete' });
 }
 
+module.exports.updateEvent = [authorize([roles.company]), validation(updateEventVal), updateEvent];
+
 async function deleteEventById(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
   if (!companyId || !establishmentId || !eventId)
@@ -668,13 +672,6 @@ async function deleteEventById(req, res) {
 }
 
 module.exports.deleteEventById = [authentication, authorizationCompany, deleteEventById];
-
-module.exports.updateEvent = [
-  authentication,
-  authorizationCompany,
-  validation(updateEventVal),
-  updateEvent,
-];
 
 async function getEventsByCompany(req, res) {
   const { companyId } = req.params;
