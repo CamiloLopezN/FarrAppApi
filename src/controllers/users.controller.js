@@ -129,7 +129,7 @@ const recoverPassword = async (req, res) => {
     return res.status(200).json({ message: 'Correo de recuperación enviado.' });
   });
 };
-module.exports.recoverPassword = [authorize([roles.admin]), recoverPassword];
+module.exports.recoverPassword = [recoverPassword];
 
 const verifyAccount = async (req, res) => {
   const { token } = req.params;
@@ -158,11 +158,12 @@ const verifyAccount = async (req, res) => {
 
   return res.status(200).json({ message: 'Account Verified' });
 };
-module.exports.verifyAccount = [authorize([roles.admin]), verifyAccount];
+module.exports.verifyAccount = [verifyAccount];
 
 const getUserById = async (req, res) => {
   const idUser = req.params.userId;
-
+  if (req.payload.role !== roles.admin && req.payload.userId !== idUser)
+    return res.status(403).json({ message: 'Forbidden' });
   try {
     const user = await User.findOne(
       { _id: idUser },
@@ -177,7 +178,7 @@ const getUserById = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
-module.exports.getUserById = [authorize([roles.admin]), getUserById];
+module.exports.getUserById = [authorize([roles.admin, roles.company, roles.client]), getUserById];
 
 const getUsers = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
