@@ -179,6 +179,7 @@ async function registerEstablishment(req, res) {
     const company = await Company.findOne({ _id: req.id }, { _id: 1, companyName: 1 }).orFail();
     establishment.isActive = true;
     establishment.averageRating = 0;
+    establishment.followers = 0;
     establishment.company = {
       // eslint-disable-next-line no-underscore-dangle
       companyId: company._id,
@@ -400,6 +401,8 @@ async function registerEvent(req, res) {
       establishmentName: establishmentSearch.establishmentName,
     };
     event.status = 'Inactivo';
+    event.interested = 0;
+    event.averageRating = 0;
     const eventSaved = await event.save();
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
