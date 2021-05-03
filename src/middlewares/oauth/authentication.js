@@ -47,8 +47,9 @@ module.exports.authorize = (authorizedRoles) => {
     if (!req.payload) payloadRole = 'guest';
     else payloadRole = req.payload.role;
 
-    if (!authorizedRoles.includes(payloadRole))
+    if (!authorizedRoles.includes(payloadRole)) {
       return res.status(403).json({ message: 'Forbidden' });
+    }
     return next();
   };
 };
