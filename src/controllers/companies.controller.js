@@ -460,18 +460,16 @@ async function getEventsByEstablishment(req, res) {
   const { companyId, establishmentId } = req.params;
   if (!companyId || !establishmentId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+
+  if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
   let events;
   try {
-    const establishment = await Establishment.findOne({
+    await Establishment.findOne({
       $and: [
         { _id: { $eq: establishmentId } },
         { 'company.companyId': { $eq: mongoose.Types.ObjectId(companyId) } },
       ],
-    });
-
-    if (!establishment)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    }).orFail();
 
     events = await Event.find({
       'establishment.establishmentId': mongoose.Types.ObjectId(establishmentId),
@@ -488,11 +486,7 @@ async function getEventsByEstablishment(req, res) {
   return res.status(200).json({ message: events });
 }
 
-module.exports.getEventsByEstablishment = [
-  authentication,
-  authorizationCompany,
-  getEventsByEstablishment,
-];
+module.exports.getEventsByEstablishment = [authorize([roles.company]), getEventsByEstablishment];
 
 async function getEventById(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
