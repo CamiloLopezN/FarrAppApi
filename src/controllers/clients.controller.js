@@ -144,9 +144,9 @@ const getClients = async (req, res) => {
 module.exports.getClients = [auth.authentication, getClients];
 
 const followEstablishment = async (req, res) => {
-  const clientId = req.id;
+  const clientId = req.payload.roleId;
 
-  const queryFind = { 'follows.establishmentId': req.body.establishmentId };
+  const queryFind = { 'follows.establishmentId': req.body.establishmentId, _id: clientId };
   try {
     const follow = await Client.findOne(queryFind);
 
@@ -179,8 +179,7 @@ const followEstablishment = async (req, res) => {
   return res.status(200).json({ message: 'Successful operation' });
 };
 module.exports.followEstablishment = [
-  auth.authentication,
-  auth.authorizationClient,
+  authorize([roles.client]),
   validation(establishmentId),
   followEstablishment,
 ];
