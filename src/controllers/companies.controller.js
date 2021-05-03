@@ -10,11 +10,7 @@ const { postEventVal, updateEventVal } = require('../middlewares/validations/eve
 const validation = require('../middlewares/validations/validation');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
-const {
-  authentication,
-  authorizationCompany,
-  authorize,
-} = require('../middlewares/oauth/authentication');
+const { authorize } = require('../middlewares/oauth/authentication');
 const {
   sendAccountValidator,
   sendEmailRegisterCompany,
@@ -88,12 +84,7 @@ async function signUp(req, res) {
   });
 }
 
-module.exports.signUp = [
-  authentication,
-  authorize([roles.guest, roles.admin]),
-  validation(signUpVal),
-  signUp,
-];
+module.exports.signUp = [authorize([roles.guest, roles.admin]), validation(signUpVal), signUp];
 
 /*
 Un admin obtiene la información de las compañias
@@ -118,7 +109,7 @@ async function getCompanies(req, res) {
   }
   return res.status(200).json({ message: companies });
 }
-module.exports.getCompanies = [authentication, authorize([roles.admin]), getCompanies];
+module.exports.getCompanies = [authorize([roles.admin]), getCompanies];
 
 /*
 Un usuario admin o company con los permisos solicita toda la información de un compañia
@@ -142,7 +133,7 @@ async function getCompanyById(req, res) {
   }
 }
 
-module.exports.profile = [authentication, authorize([roles.company, roles.admin]), getCompanyById];
+module.exports.profile = [authorize([roles.company, roles.admin]), getCompanyById];
 
 /*
 Actualizar la información del perfil
@@ -175,7 +166,6 @@ async function updateProfile(req, res) {
 }
 
 module.exports.updateProfile = [
-  authentication,
   authorize([roles.company, roles.admin]),
   validation(updateCompany),
   updateProfile,
@@ -226,7 +216,6 @@ async function registerEstablishment(req, res) {
 }
 
 module.exports.registerEstablishment = [
-  authentication,
   authorize([roles.company]),
   validation(postEstablishmentVal),
   registerEstablishment,
@@ -677,7 +666,7 @@ async function getEventsByCompany(req, res) {
   const { companyId } = req.params;
   if (!companyId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+  if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
 
   let events;
   try {
@@ -694,10 +683,9 @@ async function getEventsByCompany(req, res) {
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Resource not found' });
-    return res.status(500).json({ message: `Internal server error`, err });
+    return res.status(500).json({ message: `Internal server error` });
   }
-
   return res.status(200).json({ message: events });
 }
 
-module.exports.getEventsByCompany = [authentication, authorizationCompany, getEventsByCompany];
+module.exports.getEventsByCompany = [authorize([roles.company]), getEventsByCompany];
