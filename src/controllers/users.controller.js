@@ -6,6 +6,7 @@ const { generateToken } = require('../middlewares/oauth/authentication');
 const roles = require('../middlewares/oauth/roles');
 const utils = require('./utils');
 const { generatePasswordRand } = require('../utilities/generatePass');
+const { authorize } = require('../middlewares/oauth/authentication');
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -76,7 +77,7 @@ module.exports.login = async (req, res) => {
   return res.status(200).json({ token, userInfo });
 };
 
-module.exports.reqDeactiveUser = async (req, res) => {
+const reqDeactiveUser = async (req, res) => {
   try {
     const { userId } = req.payload;
     const { idToReqDeactive } = req.params;
@@ -98,9 +99,13 @@ module.exports.reqDeactiveUser = async (req, res) => {
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
 };
+module.exports.reqDeactiveUser = [
+  authorize([roles.admin, roles.client, roles.company]),
+  reqDeactiveUser,
+];
 
 // eslint-disable-next-line consistent-return
-module.exports.recoverPassword = async (req, res) => {
+const recoverPassword = async (req, res) => {
   const { email } = req.body;
   const foundUser = await User.findOne({ email });
 
@@ -124,8 +129,9 @@ module.exports.recoverPassword = async (req, res) => {
     return res.status(200).json({ message: 'Correo de recuperación enviado.' });
   });
 };
+module.exports.recoverPassword = [authorize([roles.admin]), recoverPassword];
 
-module.exports.verifyAccount = async (req, res) => {
+const verifyAccount = async (req, res) => {
   const { token } = req.params;
   if (!token || !req.params) return res.status(403).send({ message: 'Forbidden' });
   try {
@@ -152,3 +158,42 @@ module.exports.verifyAccount = async (req, res) => {
 
   return res.status(200).json({ message: 'Account Verified' });
 };
+module.exports.verifyAccount = [authorize([roles.admin]), verifyAccount];
+
+const getUserById = async (req, res) => {
+  const idUser = req.params.userId;
+
+  try {
+    const user = await User.findOne(
+      { _id: idUser },
+      { password: 0, createdAt: 0, updatedAt: 0, __v: 0, _id: 0 },
+    ).orFail();
+    return res.status(200).json(user);
+  } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Not found resource' });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+module.exports.getUserById = [authorize([roles.admin]), getUserById];
+
+const getUsers = async (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const page = parseInt(req.query.page, 10) || 1;
+  const projection = { password: 0, createdAt: 0, updatedAt: 0, __v: 0, _id: 0 };
+  let users;
+  try {
+    users = await User.paginate({}, { projection, limit, page });
+    if (!users) return res.status(404).json({ message: 'Resource not found' });
+  } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Not found resource' });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  return res.status(200).json(users);
+};
+module.exports.getUsers = [authorize([roles.admin]), getUsers];
