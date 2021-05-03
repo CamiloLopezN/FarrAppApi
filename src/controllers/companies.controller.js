@@ -101,8 +101,6 @@ module.exports.signUp = [
 Un admin obtiene la información de las compañias
  */
 async function getCompanies(req, res) {
-  if (!req.payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
-
   const projection = {
     createdAt: 0,
     updatedAt: 0,
@@ -122,7 +120,7 @@ async function getCompanies(req, res) {
   }
   return res.status(200).json({ message: companies });
 }
-module.exports.getCompanies = [getCompanies];
+module.exports.getCompanies = [authentication, authorize([roles.admin]), getCompanies];
 
 /*
 Un usuario admin o company con los permisos solicita toda la información de un compañia
