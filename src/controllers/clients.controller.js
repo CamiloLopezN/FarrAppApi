@@ -186,9 +186,9 @@ module.exports.followEstablishment = [
 ];
 
 const interestForEvent = async (req, res) => {
-  const clientId = req.id;
+  const clientId = req.payload.roleId;
 
-  const queryFind = { 'interests.eventId': req.body.eventId };
+  const queryFind = { 'interests.eventId': req.body.eventId, _id: clientId };
   try {
     const interest = await Client.findOne(queryFind);
     if (!interest) {
@@ -232,8 +232,7 @@ const interestForEvent = async (req, res) => {
 };
 
 module.exports.interestForEvent = [
-  auth.authentication,
-  auth.authorizationClient,
+  authorize([roles.client]),
   validation(eventId),
   interestForEvent,
 ];
