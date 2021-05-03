@@ -179,6 +179,7 @@ async function registerEstablishment(req, res) {
     const company = await Company.findOne({ _id: req.id }, { _id: 1, companyName: 1 }).orFail();
     establishment.isActive = true;
     establishment.averageRating = 0;
+    establishment.followers = 0;
     establishment.company = {
       // eslint-disable-next-line no-underscore-dangle
       companyId: company._id,
