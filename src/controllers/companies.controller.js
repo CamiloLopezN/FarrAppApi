@@ -13,7 +13,6 @@ const roles = require('../middlewares/oauth/roles');
 const {
   authentication,
   authorizationCompany,
-  authorizationAdminOrCompany,
   authenticationOrPublic,
   authorize,
 } = require('../middlewares/oauth/authentication');
@@ -261,9 +260,9 @@ module.exports.getPreviewEstablishmentsOfCompany = [
 async function getEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
 
-  if (req.id) {
-    if (companyId && companyId !== req.id)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (req.payload) {
+    if (req.payload.role === roles.company && companyId !== req.payload.roleId)
+      return res.status(401).json({ message: 'Unauthorized' });
   }
 
   let establishment;
@@ -279,11 +278,13 @@ async function getEstablishmentById(req, res) {
       return res.status(404).json({ message: 'Resource not found' });
     return res.status(500).json({ message: `Internal server error` });
   }
-
   return res.status(200).json({ message: establishment });
 }
 
-module.exports.getEstablishmentById = [authenticationOrPublic, getEstablishmentById];
+module.exports.getEstablishmentById = [
+  authorize([roles.company, roles.guest]),
+  getEstablishmentById,
+];
 
 async function updateEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
