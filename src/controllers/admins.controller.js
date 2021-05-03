@@ -5,7 +5,7 @@ const { postAdminVal, updateAdmin } = require('../middlewares/validations/admin.
 const { validatePass } = require('./password.controller');
 const { Admin, User } = require('../models/entity.model');
 const roles = require('../middlewares/oauth/roles');
-const auth = require('../middlewares/oauth/authentication');
+const { authorize } = require('../middlewares/oauth/authentication');
 
 // eslint-disable-next-line consistent-return
 const postAdmin = async (req, res) => {
@@ -13,8 +13,8 @@ const postAdmin = async (req, res) => {
   try {
     const foundAdmin = await User.findOne({ email });
     if (foundAdmin)
-      return res.status(409).json({
-        message: 'Invalid email or Password!',
+      return res.status(400).json({
+        message: 'Admin already exists',
       });
     const newUser = new User({
       email,
@@ -39,55 +39,57 @@ const postAdmin = async (req, res) => {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
-    return res.status(500).json({ message: `internal server error  ${error}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
-  return res.status(200).json({ message: 'Registro exitoso' });
+  return res.status(201).json({ message: 'Successful operation' });
 };
 module.exports.postAdmin = [
-  auth.authentication,
-  auth.authorizationAdmin,
+  authorize([roles.admin]),
   validation(postAdminVal),
   validatePass,
   postAdmin,
 ];
 
 const getAdminById = async (req, res) => {
+  let foundAdmin;
   try {
     const { adminId } = req.params;
-    const foundAdmin = await Admin.find({ _id: adminId }, { firstName: 1, lastName: 1, _id: 0 });
-    if (foundAdmin) return res.status(200).json({ message: foundAdmin });
-    return res.status(404).json({ message: 'Admin not found' });
+    foundAdmin = await Admin.find({ _id: adminId }, { firstName: 1, lastName: 1, _id: 0 }).orFail();
   } catch (error) {
+    if (error instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Admin not found' });
     if (error instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
+  return res.status(200).json(foundAdmin);
 };
-module.exports.getAdminById = [auth.authentication, auth.authorizationAdmin, getAdminById];
+module.exports.getAdminById = [authorize([roles.admin]), getAdminById];
 
 const updateProfileAdmin = async (req, res) => {
+  let update;
   try {
     const { adminId } = req.params;
     const data = {
       $set: req.body,
     };
-    const update = await Admin.updateOne({ _id: adminId }, data);
-    if (!update) return res.status(404).json({ message: 'Resource not found' });
-    return res.status(200).json({ message: req.body });
+    update = await Admin.findOneAndUpdate({ _id: adminId }, data).orFail();
   } catch (error) {
+    if (error instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
     if (error instanceof mongoose.Error.ValidationError)
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: error.errors });
-    return res.status(500).json({ message: `internal server error  ${error}` });
+    return res.status(500).json({ message: `Internal server error` });
   }
+  return res.status(200).json({ message: 'Successful operation' });
 };
 
 module.exports.updateProfileAdmin = [
-  auth.authentication,
-  auth.authorizationAdmin,
+  authorize([roles.admin]),
   validation(updateAdmin),
   updateProfileAdmin,
 ];
