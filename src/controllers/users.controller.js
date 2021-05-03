@@ -5,7 +5,7 @@ const { User, Company, Admin, Client } = require('../models/entity.model');
 const { generateToken } = require('../middlewares/oauth/authentication');
 const roles = require('../middlewares/oauth/roles');
 const utils = require('./utils');
-const { generatePasswordRand } = require('../utilities/generatePass');
+const { randomPassword } = require('../utilities/generatePass');
 const { authorize } = require('../middlewares/oauth/authentication');
 const { validatePass } = require('./password.controller');
 const validator = require('../middlewares/validations/validation');
@@ -111,7 +111,7 @@ const recoverPassword = async (req, res) => {
   const { email } = req.body;
   const foundUser = await User.findOne({ email });
   if (foundUser) {
-    const password = generatePasswordRand(8, 'alf');
+    const password = randomPassword(8, 'alf');
     const encryptedPassword = await foundUser.encryptPassword(password);
     await User.updateOne({ email }, { $set: { password: encryptedPassword } });
     utils.sendRecoverPassword(email, password);

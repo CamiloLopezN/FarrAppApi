@@ -8,7 +8,7 @@ const {
 const { signUpVal, updateCompany } = require('../middlewares/validations/company.joi');
 const { postEventVal, updateEventVal } = require('../middlewares/validations/event.joi');
 const validation = require('../middlewares/validations/validation');
-const { generatePasswordRand } = require('../utilities/generatePass');
+const { randomPassword } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
 const { authorize } = require('../middlewares/oauth/authentication');
 const {
@@ -36,7 +36,7 @@ const signUp = async (req, res) => {
     user.isActive = true;
   }
 
-  const passwordAux = password || generatePasswordRand(8, 'alf');
+  const passwordAux = password || randomPassword(8, 'alf');
   user.password = await user.encryptPassword(passwordAux);
 
   const company = new Company({

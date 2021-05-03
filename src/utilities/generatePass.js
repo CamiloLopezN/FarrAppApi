@@ -1,6 +1,4 @@
-const generatePass = {};
-
-generatePass.generatePasswordRand = (length, type) => {
+module.exports.randomPassword = (length, type) => {
   let characters;
   switch (type) {
     case 'num':
@@ -26,5 +24,3 @@ generatePass.generatePasswordRand = (length, type) => {
   }
   return pass;
 };
-
-module.exports = generatePass;
