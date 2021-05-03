@@ -495,9 +495,9 @@ async function getEventById(req, res) {
   let event;
   try {
     if (req.payload) {
-      const { roleId } = req.payload;
-      if (companyId !== roleId) {
-        return res.status(403).json({ message: 'Forbidden' });
+      if (req.payload.role === roles.company) {
+        if (companyId !== req.payload.roleId)
+          return res.status(401).json({ message: 'Unauthorized' });
       }
       const establishment = await Establishment.findOne({
         $and: [
