@@ -617,7 +617,7 @@ async function deleteEventById(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
   if (!companyId || !establishmentId || !eventId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+  if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
     const establishment = await Establishment.findOne({
@@ -671,7 +671,7 @@ async function deleteEventById(req, res) {
   return res.status(200).json({ message: 'Deleted event' });
 }
 
-module.exports.deleteEventById = [authentication, authorizationCompany, deleteEventById];
+module.exports.deleteEventById = [authorize([roles.company]), deleteEventById];
 
 async function getEventsByCompany(req, res) {
   const { companyId } = req.params;
