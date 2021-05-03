@@ -2,8 +2,6 @@ const { Router } = require('express');
 
 const router = Router();
 const companiesCtrl = require('../controllers/companies.controller');
-const establishmentsCtrl = require('../controllers/establishments.controller');
-const eventCtrl = require('../controllers/events.controller');
 
 router.post('/', companiesCtrl.signUp);
 router.get('/', companiesCtrl.getCompanies);
