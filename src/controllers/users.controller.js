@@ -8,8 +8,10 @@ const utils = require('./utils');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const { authorize } = require('../middlewares/oauth/authentication');
 const { validatePass } = require('./password.controller');
+const validator = require('../middlewares/validations/validation');
+const userValidation = require('../middlewares/validations/user.joi');
 
-module.exports.login = async (req, res) => {
+const login = async (req, res) => {
   const { email, password } = req.body;
   let token;
   const payload = {};
@@ -77,6 +79,7 @@ module.exports.login = async (req, res) => {
   }
   return res.status(200).json({ token, userInfo });
 };
+module.exports.login = [validator(userValidation.login), login];
 
 const reqDeactivateUser = async (req, res) => {
   try {
@@ -206,6 +209,7 @@ const updateUser = async (req, res) => {
 };
 module.exports.updateUser = [
   authorize([roles.admin, roles.company, roles.client]),
+  validator(userValidation.login),
   validatePass,
   updateUser,
 ];
@@ -268,5 +272,4 @@ const refreshToken = async (req, res) => {
   }
   return res.status(200).json({ token, userInfo });
 };
-
 module.exports.refreshToken = [refreshToken];
