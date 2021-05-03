@@ -45,10 +45,10 @@ function sendValidation(userMail, token, validationURL) {
   sendMail(userMail, subject, text, html);
 }
 
-function sendExpectVerifyCompany(userMail, companyName) {
+function sendEmailRegisterCompany(userMail, companyName) {
   const subject = `Solicitud de registro de empresa en FarrApp`;
   const text =
-    `Hola, ${companyName}. Tu solicitud para unirte a FarrApp ha sido recibida. ` +
+    `Bienvenido a FarrApp! ${companyName}. Se ha registrado un empresa con este correo. Tu solicitud para unirte a FarrApp ha sido recibida. ` +
     `Pronto un asesor se comunicará contigo para continuar con el proceso de registro. ` +
     `Equipo de desarrollo de FarrApp`;
   const html = text;
@@ -83,7 +83,7 @@ function sendRecoverPassword(userMail, tempPassword) {
 
 module.exports = {
   sendValidation,
-  sendExpectVerifyCompany,
+  sendEmailRegisterCompany,
   sendCreatedUserByAdmin,
   sendRecoverPassword,
 };
