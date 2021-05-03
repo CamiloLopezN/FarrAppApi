@@ -398,11 +398,12 @@ async function registerEvent(req, res) {
   const { companyId, establishmentId } = req.params;
   if (!companyId || !establishmentId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
-  if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+
+  if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
   let eventId;
   try {
     const establishmentSearch = await Establishment.findOne(
-      { _id: establishmentId },
+      { _id: establishmentId, 'company.companyId': mongoose.Types.ObjectId(companyId) },
       { establishmentName: 1, _id: 1 },
     ).orFail();
     const event = new Event(req.body);
@@ -450,8 +451,7 @@ async function registerEvent(req, res) {
 }
 
 module.exports.registerEvent = [
-  authentication,
-  authorizationCompany,
+  authorize([roles.company]),
   validation(postEventVal),
   registerEvent,
 ];
