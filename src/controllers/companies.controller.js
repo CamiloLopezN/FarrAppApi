@@ -185,12 +185,12 @@ module.exports.updateProfile = [
 
 async function registerEstablishment(req, res) {
   const { companyId } = req.params;
-  if (companyId && companyId !== req.id)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId && companyId !== req.payload.roleId)
+    return res.status(401).json({ message: 'Unauthorized' });
   let establishmentId;
   try {
+    const company = await Company.findOne({ _id: companyId }, { _id: 1, companyName: 1 }).orFail();
     const establishment = new Establishment(req.body);
-    const company = await Company.findOne({ _id: req.id }, { _id: 1, companyName: 1 }).orFail();
     establishment.isActive = true;
     establishment.averageRating = 0;
     establishment.followers = 0;
@@ -220,6 +220,8 @@ async function registerEstablishment(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful registration', establishmentId });
@@ -227,7 +229,7 @@ async function registerEstablishment(req, res) {
 
 module.exports.registerEstablishment = [
   authentication,
-  authorizationCompany,
+  authorize([roles.company]),
   validation(postEstablishmentVal),
   registerEstablishment,
 ];
