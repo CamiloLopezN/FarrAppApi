@@ -104,32 +104,18 @@ module.exports.reqDeactivateUser = [
   reqDeactivateUser,
 ];
 
-// eslint-disable-next-line consistent-return
 const recoverPassword = async (req, res) => {
   const { email } = req.body;
   const foundUser = await User.findOne({ email });
-
-  if (!foundUser)
-    return res.status(404).json({
-      message: 'Se produjo un error, el correo ingresado no se encuentra registrado',
-    });
-  if (!foundUser.isActive)
-    return res.status(403).json({ message: 'Esta cuenta se encuentra desactivada.' });
-  if (foundUser.hasReqDeactivation)
-    return res
-      .status(403)
-      .json({ message: 'Esta cuenta se encuentra en proceso de desativación.' });
-
-  const password = generatePasswordRand(8, 'alf');
-  const data = { $set: { password } };
-  data.password = await foundUser.encryptPassword(password);
-  await User.updateOne({ email }, data, (err) => {
-    if (err) return res.status(500).json({ message: 'Se produjo un problema en la operación.' });
+  if (foundUser) {
+    const password = generatePasswordRand(8, 'alf');
+    const encryptedPassword = await foundUser.encryptPassword(password);
+    await User.updateOne({ email }, { $set: { password: encryptedPassword } });
     utils.sendRecoverPassword(email, password);
-    return res.status(200).json({ message: 'Correo de recuperación enviado.' });
-  });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
 };
-module.exports.recoverPassword = [recoverPassword];
+module.exports.recoverPassword = [validator(userValidation.email), recoverPassword];
 
 const verifyAccount = async (req, res) => {
   const { token } = req.params;
