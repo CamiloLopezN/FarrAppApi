@@ -20,7 +20,7 @@ const {
 /*
 Registrar una compañia
  */
-async function signUp(req, res) {
+const signUp = async (req, res) => {
   const { email, password, companyName, address, contactNumber, nit } = req.body;
   if (!password && !req.payload) return res.status(403).json({ message: 'Forbidden' });
   const user = new User({
@@ -82,14 +82,13 @@ async function signUp(req, res) {
   return res.status(200).json({
     message: 'Successful operation',
   });
-}
-
+};
 module.exports.signUp = [authorize([roles.guest, roles.admin]), validation(signUpVal), signUp];
 
 /*
 Un admin obtiene la información de las compañias
  */
-async function getCompanies(req, res) {
+const getCompanies = async (req, res) => {
   const projection = {
     createdAt: 0,
     updatedAt: 0,
@@ -108,13 +107,13 @@ async function getCompanies(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: companies });
-}
+};
 module.exports.getCompanies = [authorize([roles.admin]), getCompanies];
 
 /*
 Un usuario admin o company con los permisos solicita toda la información de un compañia
  */
-async function getCompanyById(req, res) {
+const getCompanyById = async (req, res) => {
   const { companyId } = req.params;
   if (req.payload.role === roles.company && req.payload.roleId !== companyId)
     return res.status(401).json({ message: 'Unauthorized' });
@@ -131,14 +130,13 @@ async function getCompanyById(req, res) {
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
     return res.status(500).json({ message: `Internal server error` });
   }
-}
-
+};
 module.exports.profile = [authorize([roles.company, roles.admin]), getCompanyById];
 
 /*
 Actualizar la información del perfil
  */
-async function updateProfile(req, res) {
+const updateProfile = async (req, res) => {
   const { companyId } = req.params;
   if (req.payload.role === roles.company && req.payload.roleId !== companyId)
     return res.status(401).json({ message: 'Unauthorized' });
@@ -163,15 +161,14 @@ async function updateProfile(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful update' });
-}
-
+};
 module.exports.updateProfile = [
   authorize([roles.company, roles.admin]),
   validation(updateCompany),
   updateProfile,
 ];
 
-async function registerEstablishment(req, res) {
+const registerEstablishment = async (req, res) => {
   const { companyId } = req.params;
   if (companyId && companyId !== req.payload.roleId)
     return res.status(401).json({ message: 'Unauthorized' });
@@ -213,15 +210,14 @@ async function registerEstablishment(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful registration', establishmentId });
-}
-
+};
 module.exports.registerEstablishment = [
   authorize([roles.company]),
   validation(postEstablishmentVal),
   registerEstablishment,
 ];
 
-async function getPreviewEstablishmentsOfCompany(req, res) {
+const getPreviewEstablishmentsOfCompany = async (req, res) => {
   const { companyId } = req.params;
   if (req.payload.role === roles.company && req.payload.roleId !== companyId)
     return res.status(401).json({ message: 'Unauthorized' });
@@ -238,14 +234,13 @@ async function getPreviewEstablishmentsOfCompany(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: establishments });
-}
-
+};
 module.exports.getPreviewEstablishmentsOfCompany = [
   authorize([roles.company, roles.admin]),
   getPreviewEstablishmentsOfCompany,
 ];
 
-async function getEstablishmentById(req, res) {
+const getEstablishmentById = async (req, res) => {
   const { companyId, establishmentId } = req.params;
 
   if (req.payload) {
@@ -266,14 +261,13 @@ async function getEstablishmentById(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: establishment });
-}
-
+};
 module.exports.getEstablishmentById = [
   authorize([roles.company, roles.guest]),
   getEstablishmentById,
 ];
 
-async function updateEstablishmentById(req, res) {
+const updateEstablishmentById = async (req, res) => {
   const { companyId, establishmentId } = req.params;
   if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
 
@@ -316,15 +310,14 @@ async function updateEstablishmentById(req, res) {
   }
 
   return res.status(200).json({ message: 'Update complete' });
-}
-
+};
 module.exports.updateEstablishmentById = [
   authorize([roles.company]),
   validation(updateEstablishmentVal),
   updateEstablishmentById,
 ];
 
-async function deleteEstablishmentById(req, res) {
+const deleteEstablishmentById = async (req, res) => {
   const { companyId, establishmentId } = req.params;
   if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
 
@@ -379,11 +372,10 @@ async function deleteEstablishmentById(req, res) {
     return res.status(500).json({ message: `Internal server error`, err });
   }
   return res.status(200).json({ message: 'Deleted establishment' });
-}
-
+};
 module.exports.deleteEstablishmentById = [authorize([roles.company]), deleteEstablishmentById];
 
-async function registerEvent(req, res) {
+const registerEvent = async (req, res) => {
   const { companyId, establishmentId } = req.params;
   if (!companyId || !establishmentId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
@@ -437,15 +429,14 @@ async function registerEvent(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: 'Successful registration', eventId });
-}
-
+};
 module.exports.registerEvent = [
   authorize([roles.company]),
   validation(postEventVal),
   registerEvent,
 ];
 
-async function getEventsByEstablishment(req, res) {
+const getEventsByEstablishment = async (req, res) => {
   const { companyId, establishmentId } = req.params;
   if (!companyId || !establishmentId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
@@ -473,11 +464,10 @@ async function getEventsByEstablishment(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: events });
-}
-
+};
 module.exports.getEventsByEstablishment = [authorize([roles.company]), getEventsByEstablishment];
 
-async function getEventById(req, res) {
+const getEventById = async (req, res) => {
   const { companyId, establishmentId, eventId } = req.params;
   if (!companyId || !establishmentId || !eventId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
@@ -511,14 +501,13 @@ async function getEventById(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: event });
-}
-
+};
 module.exports.getEventbyId = [
   authorize([roles.guest, roles.company, roles.admin, roles.client]),
   getEventById,
 ];
 
-async function updateEvent(req, res) {
+const updateEvent = async (req, res) => {
   const { companyId, establishmentId, eventId } = req.params;
   if (!companyId || !establishmentId || !eventId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
@@ -598,11 +587,10 @@ async function updateEvent(req, res) {
   }
 
   return res.status(200).json({ message: 'Update complete' });
-}
-
+};
 module.exports.updateEvent = [authorize([roles.company]), validation(updateEventVal), updateEvent];
 
-async function deleteEventById(req, res) {
+const deleteEventById = async (req, res) => {
   const { companyId, establishmentId, eventId } = req.params;
   if (!companyId || !establishmentId || !eventId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
@@ -658,11 +646,10 @@ async function deleteEventById(req, res) {
   }
 
   return res.status(200).json({ message: 'Deleted event' });
-}
-
+};
 module.exports.deleteEventById = [authorize([roles.company]), deleteEventById];
 
-async function getEventsByCompany(req, res) {
+const getEventsByCompany = async (req, res) => {
   const { companyId } = req.params;
   if (!companyId)
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
@@ -686,6 +673,5 @@ async function getEventsByCompany(req, res) {
     return res.status(500).json({ message: `Internal server error` });
   }
   return res.status(200).json({ message: events });
-}
-
+};
 module.exports.getEventsByCompany = [authorize([roles.company]), getEventsByCompany];
