@@ -78,18 +78,17 @@ module.exports.login = async (req, res) => {
   return res.status(200).json({ token, userInfo });
 };
 
-const reqDeactiveUser = async (req, res) => {
+const reqDeactivateUser = async (req, res) => {
   try {
-    const { userId } = req.payload;
-    const { idToReqDeactive } = req.params;
-    if (userId !== idToReqDeactive)
+    const { userId } = req.params;
+    if (req.payload.userId !== userId)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     const data = {
       $set: {
         hasReqDeactivation: true,
       },
     };
-    const update = await User.findOneAndUpdate({ _id: idToReqDeactive }, data);
+    const update = await User.findOneAndUpdate({ _id: userId }, data);
     if (!update) return res.status(404).json({ message: 'Resource not found' });
     return res.status(200).json({ message: 'Operación realizada satisfactoriamente!' });
   } catch (error) {
@@ -100,9 +99,9 @@ const reqDeactiveUser = async (req, res) => {
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
 };
-module.exports.reqDeactiveUser = [
+module.exports.reqDeactivateUser = [
   authorize([roles.admin, roles.client, roles.company]),
-  reqDeactiveUser,
+  reqDeactivateUser,
 ];
 
 // eslint-disable-next-line consistent-return
