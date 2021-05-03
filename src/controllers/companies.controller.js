@@ -151,8 +151,8 @@ Actualizar la información del perfil
  */
 async function updateProfile(req, res) {
   const { companyId } = req.params;
-  if (req.id !== companyId)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (req.payload.role === roles.company && req.payload.roleId !== companyId)
+    return res.status(401).json({ message: 'Unauthorized' });
 
   const { body } = req;
   const data = {
@@ -160,22 +160,25 @@ async function updateProfile(req, res) {
   };
 
   try {
-    const update = await Company.findOneAndUpdate({ _id: req.id }, data);
+    const update = await Company.findOneAndUpdate({ _id: companyId }, data, {
+      runValidators: true,
+      context: 'query',
+    });
     if (!update) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
-      return res
-        .status(400)
-        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+      return res.status(400).json({
+        message: 'Incomplete or bad formatted client data',
+        errors: err.errors,
+      });
     return res.status(500).json({ message: `Internal server error` });
   }
-
   return res.status(200).json({ message: 'Successful update' });
 }
 
 module.exports.updateProfile = [
   authentication,
-  authorizationCompany,
+  authorize([roles.company, roles.admin]),
   validation(updateCompany),
   updateProfile,
 ];
