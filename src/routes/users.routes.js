@@ -5,10 +5,6 @@ const userController = require('../controllers/users.controller');
 const validator = require('../middlewares/validations/validation');
 const { login, email } = require('../middlewares/validations/user.joi');
 const auth = require('../middlewares/oauth/authentication');
-/* GET users listing. */
-router.get('/', (req, res) => {
-  res.send('respond with a resource');
-});
 
 router.post('/login', validator(login), userController.login);
 router.post(
@@ -18,5 +14,7 @@ router.post(
 );
 router.post('/recover-password', validator(email), userController.recoverPassword);
 router.get('/verify-account/:token', userController.verifyAccount);
+router.get('/:userId', userController.getUserById);
+router.get('/', userController.getUsers);
 
 module.exports = router;
