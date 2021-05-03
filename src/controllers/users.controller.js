@@ -7,6 +7,7 @@ const roles = require('../middlewares/oauth/roles');
 const utils = require('./utils');
 const { generatePasswordRand } = require('../utilities/generatePass');
 const { authorize } = require('../middlewares/oauth/authentication');
+const { validatePass } = require('./password.controller');
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -198,3 +199,89 @@ const getUsers = async (req, res) => {
   return res.status(200).json(users);
 };
 module.exports.getUsers = [authorize([roles.admin]), getUsers];
+
+const updateUser = async (req, res) => {
+  const { userId } = req.params;
+  const { email, password } = req.body;
+  if (req.payload.role !== roles.admin && req.payload.userId !== userId)
+    return res.status(403).json({ message: 'Forbidden' });
+  try {
+    const user = await User.findOne({ _id: userId }).orFail();
+    const pass = await user.encryptPassword(password);
+    const data = { $set: { email, password: pass } };
+    await User.updateOne({ _id: userId }, data);
+  } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Not found resource' });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
+};
+module.exports.updateUser = [
+  authorize([roles.admin, roles.company, roles.client]),
+  validatePass,
+  updateUser,
+];
+
+const refreshToken = async (req, res) => {
+  const payload = {};
+  const userInfo = {};
+  let token;
+  try {
+    const user = await User.findOne({ _id: req.payload.userId }).orFail();
+
+    if (user.role === roles.company) {
+      const company = await Company.findOne(
+        // eslint-disable-next-line no-underscore-dangle
+        { userId: user._id },
+        { _id: 1, companyName: 1, customerId: 1 },
+      ).orFail();
+      // eslint-disable-next-line no-underscore-dangle
+      payload.roleId = company._id;
+      payload.customerId = company.customerId;
+      payload.role = roles.company;
+      userInfo.firstName = company.companyName;
+    } else if (user.role === roles.admin) {
+      // eslint-disable-next-line no-underscore-dangle
+      const admin = await Admin.findOne(
+        // eslint-disable-next-line no-underscore-dangle
+        { userId: user._id },
+        { _id: 1, firstName: 1, lastName: 1 },
+      );
+      // eslint-disable-next-line no-underscore-dangle
+      payload.roleId = admin._id;
+      payload.role = roles.admin;
+      userInfo.firstName = admin.firstName;
+      userInfo.lastName = admin.lastName;
+    } else {
+      // eslint-disable-next-line no-underscore-dangle
+      const client = await Client.findOne(
+        // eslint-disable-next-line no-underscore-dangle
+        { userId: user._id },
+        { _id: 1, firstName: 1, lastName: 1 },
+      );
+      // eslint-disable-next-line no-underscore-dangle
+      payload.roleId = client._id;
+      payload.role = roles.client;
+      userInfo.firstName = client.firstName;
+      userInfo.lastName = client.lastName;
+    }
+
+    // eslint-disable-next-line no-underscore-dangle
+    payload.userId = user._id;
+    token = await generateToken(payload);
+  } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'User not found' });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: `internal server error  ${err}` });
+  }
+  return res.status(200).json({ token, userInfo });
+};
+
+module.exports.refreshToken = [refreshToken];
