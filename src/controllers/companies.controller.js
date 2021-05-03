@@ -415,6 +415,8 @@ async function registerEvent(req, res) {
       establishmentName: establishmentSearch.establishmentName,
     };
     event.status = 'Inactivo';
+    event.interested = 0;
+    event.averageRating = 0;
     const eventSaved = await event.save();
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
@@ -691,9 +693,9 @@ async function getEventsByCompany(req, res) {
 
   let events;
   try {
-    events = await Establishment.findOne(
+    events = await Company.findOne(
       {
-        'company.companyId': mongoose.Types.ObjectId(companyId),
+        _id: mongoose.Types.ObjectId(companyId),
       },
       { events: 1, _id: 0 },
     ).orFail();
@@ -702,7 +704,9 @@ async function getEventsByCompany(req, res) {
       return res
         .status(400)
         .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
-    return res.status(500).json({ message: `Internal server error` });
+    if (err instanceof mongoose.Error.DocumentNotFoundError)
+      return res.status(404).json({ message: 'Resource not found' });
+    return res.status(500).json({ message: `Internal server error`, err });
   }
 
   return res.status(200).json({ message: events });
