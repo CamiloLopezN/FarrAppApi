@@ -1,20 +1,13 @@
-const auth = require('../middlewares/oauth/authentication');
-const {
-  createToken,
-  listCustomers,
-  createCustomer,
-  listPlans,
-  subscribeCustomer,
-  cancelSubscriptionToPlan,
-} = require('../payments/index');
-const payment = require('../payments/index');
+const { authorize } = require('../middlewares/oauth/authentication');
+const roles = require('../middlewares/oauth/roles');
+const payments = require('../payments');
 const { Company } = require('../models/entity.model');
 
 const tax = 0.19;
 
 module.exports.postToken = (req, res) => {
   const { number, expYear, expMonth, cvc } = req.body;
-  createToken(number, expYear, expMonth, cvc, (error, token) => {
+  payments.createToken(number, expYear, expMonth, cvc, (error, token) => {
     if (error) return res.status(503).json({ message: 'Service unavailable' });
     if (!token.status) return res.status(400).json({ message: 'Error creating token' });
     return res.status(200).json({
@@ -24,11 +17,11 @@ module.exports.postToken = (req, res) => {
 };
 
 const getCustomers = async (req, res) => {
-  const customers = await listCustomers();
+  const customers = await payments.listCustomers();
   return res.status(200).json(customers);
 };
 
-module.exports.listCustomers = [auth.authentication, auth.authorizationAdmin, getCustomers];
+module.exports.listCustomers = [authorize([roles.admin]), getCustomers];
 
 const postCustomer = async (req, res) => {
   const {
@@ -44,12 +37,15 @@ const postCustomer = async (req, res) => {
     cardExpMonth,
     cardCVC,
     isDefaultCard,
+    companyId,
   } = req.body;
+  if (req.payload.role === roles.company && req.payload.roleId !== companyId)
+    return res.status(403).json({ message: 'Forbidden' });
   let customer;
   try {
-    const token = await createToken(cardNumber, cardExpYear, cardExpMonth, cardCVC);
+    const token = await payments.createToken(cardNumber, cardExpYear, cardExpMonth, cardCVC);
     if (!token.status) return res.status(400).json(token.data);
-    customer = await createCustomer(
+    customer = await payments.createCustomer(
       token.id,
       firstName,
       lastName,
@@ -62,7 +58,7 @@ const postCustomer = async (req, res) => {
     );
     if (!customer.status) return res.status(400).json(customer.data);
     await Company.findOneAndUpdate(
-      { _id: req.payload.roleId },
+      { _id: companyId },
       { customerId: customer.data.customerId },
     ).orFail();
   } catch (error) {
@@ -75,13 +71,15 @@ const postCustomer = async (req, res) => {
   });
 };
 
-module.exports.postCompanyCustomer = [auth.authentication, auth.authorizationCompany, postCustomer];
+module.exports.postCompanyCustomer = [authorize([roles.company, roles.admin]), postCustomer];
 
 const subscribeToPlan = async (req, res) => {
   const { planId, customerId, cardToken, docType, docNumber } = req.body;
+  if (req.payload.role === roles.company && req.payload.customerId !== customerId)
+    return res.status(403).json({ message: 'Forbidden' });
   let suscrib;
   try {
-    suscrib = await subscribeCustomer(planId, customerId, cardToken, docType, docNumber);
+    suscrib = await payments.subscribeCustomer(planId, customerId, cardToken, docType, docNumber);
     if (!suscrib.status) return res.status(400).json({ message: 'Error creating subscription' });
   } catch (e) {
     return res.status(503).json({ message: 'Service unavailable' });
@@ -89,12 +87,16 @@ const subscribeToPlan = async (req, res) => {
   return res.status(200).json(suscrib);
 };
 
-module.exports.postSubscription = [auth.authentication, auth.authorizationCompany, subscribeToPlan];
+module.exports.postSubscription = [authorize([roles.admin, roles.company]), subscribeToPlan];
 
 const cancelSubscription = async (req, res) => {
   let cancellation;
   try {
-    cancellation = await cancelSubscriptionToPlan(req.params.subscriptionId);
+    const subscription = await payments.retrieveSubscription(req.params.subscriptionId);
+    if (!subscription.status) return res.status(404).json({ message: 'Subscription not found' });
+    if (req.payload.role === roles.company && subscription.customer !== req.payload.customerId)
+      return res.status(403).json({ message: 'Unauthorized' });
+    cancellation = await payments.cancelSubscriptionToPlan(req.params.subscriptionId);
     if (!cancellation.status) return res.status(400).json({ message: 'Unsubscribe error' });
   } catch (e) {
     return res.status(503).json({ message: 'Service unavailable' });
@@ -103,16 +105,15 @@ const cancelSubscription = async (req, res) => {
 };
 
 module.exports.getCancelSubscription = [
-  auth.authentication,
-  auth.authorizationCompany,
+  authorize([roles.admin, roles.company]),
   cancelSubscription,
 ];
 
-module.exports.getPlans = async (req, res) => {
+const getPlans = async (req, res) => {
   let plans;
   let treatedPlans;
   try {
-    plans = await listPlans();
+    plans = await payments.listPlans();
     treatedPlans = plans.data.map((plan) => ({
       planId: plan.id_plan,
       planName: plan.description,
@@ -129,10 +130,17 @@ module.exports.getPlans = async (req, res) => {
   return res.status(200).json(treatedPlans);
 };
 
+module.exports.getPlans = [
+  authorize([roles.company, roles.admin, roles.client, roles.guest]),
+  getPlans,
+];
+
 const getCustomerById = async (req, res) => {
   let customer;
   try {
-    customer = await payment.getCustomerById(req.params.customerId);
+    if (req.payload.role === roles.company && req.params.customerId !== req.payload.customerId)
+      return res.status(403).json({ message: 'Unauthorized' });
+    customer = await payments.getCustomerById(req.params.customerId);
     if (customer.status === false) return res.status(404).json({ message: 'Customer not found' });
   } catch (error) {
     return res.status(503).json({ message: 'Service unavailable' });
@@ -140,17 +148,15 @@ const getCustomerById = async (req, res) => {
   return res.status(200).json(customer.data);
 };
 
-module.exports.getCustomer = [
-  auth.authentication,
-  auth.authorizationAdminOrCompany,
-  getCustomerById,
-];
+module.exports.getCustomer = [authorize([roles.company, roles.admin]), getCustomerById];
 
 const changeDefaultCard = async (req, res) => {
   let defaultCard;
   const { cardFranchise, cardToken, cardMask } = req.body;
+  if (req.payload.role === roles.company && req.params.customerId !== req.payload.customerId)
+    return res.status(403).json({ message: 'Unauthorized' });
   try {
-    defaultCard = await payment.changeDefaultCard(
+    defaultCard = await payments.changeDefaultCard(
       cardFranchise,
       cardToken,
       cardMask,
@@ -163,19 +169,17 @@ const changeDefaultCard = async (req, res) => {
   return res.status(200).json(defaultCard.data);
 };
 
-module.exports.changeDefaultCard = [
-  auth.authentication,
-  auth.authorizationCompany,
-  changeDefaultCard,
-];
+module.exports.changeDefaultCard = [authorize([roles.admin, roles.company]), changeDefaultCard];
 
 const addCustomerCard = async (req, res) => {
   const { customerId } = req.params;
   const { cardNumber, cardExpYear, cardExpMonth, cardCVC } = req.body;
+  if (req.payload.role === roles.company && customerId !== req.payload.customerId)
+    return res.status(403).json({ message: 'Unauthorized' });
   try {
-    const token = await createToken(cardNumber, cardExpYear, cardExpMonth, cardCVC);
+    const token = await payments.createToken(cardNumber, cardExpYear, cardExpMonth, cardCVC);
     if (!token.status) return res.status(400).json(token.data);
-    const card = await payment.addCustomerCard(token, customerId);
+    const card = await payments.addCustomerCard(token.id, customerId);
     if (!card.status) return res.status(400).json(card.data);
   } catch (err) {
     return res.status(503).json({ message: 'Service unavailable' });
@@ -183,13 +187,15 @@ const addCustomerCard = async (req, res) => {
   return res.status(201).json({ message: 'Card added successfully' });
 };
 
-module.exports.addCustomerCard = [auth.authentication, auth.authorizationCompany, addCustomerCard];
+module.exports.addCustomerCard = [authorize([roles.admin, roles.company]), addCustomerCard];
 
 const removeCustomerCard = async (req, res) => {
   let removedCard;
   const { franchise, mask } = req.query;
+  if (req.payload.role === roles.company && req.params.customerId !== req.payload.customerId)
+    return res.status(403).json({ message: 'Unauthorized' });
   try {
-    removedCard = await payment.removeCustomerCard(franchise, mask, req.params.customerId);
+    removedCard = await payments.removeCustomerCard(franchise, mask, req.params.customerId);
     if (!removedCard.status) return res.status(404).json({ message: 'Customer not found' });
   } catch (error) {
     return res.status(503).json({ message: 'Service unavailable' });
@@ -197,8 +203,4 @@ const removeCustomerCard = async (req, res) => {
   return res.status(200).json({ message: 'Card successfully removed' });
 };
 
-module.exports.removeCustomerCard = [
-  auth.authentication,
-  auth.authorizationCompany,
-  removeCustomerCard,
-];
+module.exports.removeCustomerCard = [authorize([roles.admin, roles.company]), removeCustomerCard];
