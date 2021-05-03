@@ -8,10 +8,10 @@ const {
 const { signUpVal, updateCompany } = require('../middlewares/validations/company.joi');
 const { postEventVal, updateEventVal } = require('../middlewares/validations/event.joi');
 const validation = require('../middlewares/validations/validation');
-const { randomPassword } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
 const { authorize } = require('../middlewares/oauth/authentication');
 const {
+  randomPassword,
   sendAccountValidator,
   sendEmailRegisterCompany,
   sendCreatedUserByAdmin,

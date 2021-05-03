@@ -9,9 +9,8 @@ const { establishmentId } = require('../middlewares/validations/establishment.jo
 const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { authorize } = require('../middlewares/oauth/authentication');
-const { randomPassword } = require('../utilities/generatePass');
 const calculation = require('../utilities/calculations');
-const { sendAccountValidator, sendCreatedUserByAdmin } = require('./utils');
+const { sendAccountValidator, sendCreatedUserByAdmin, randomPassword } = require('./utils');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
