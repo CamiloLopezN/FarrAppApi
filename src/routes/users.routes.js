@@ -7,6 +7,7 @@ const { login, email } = require('../middlewares/validations/user.joi');
 const auth = require('../middlewares/oauth/authentication');
 
 router.post('/login', validator(login), userController.login);
+router.get('/refresh-token', userController.refreshToken);
 router.post(
   '/request-deactivation/:idToReqDeactive',
   auth.authentication,
