@@ -53,6 +53,8 @@ module.exports.subscribeCustomer = (planId, customerId, cardToken, docType, docN
     doc_number: docNumber,
   });
 
+module.exports.retrieveSubscription = (subscriptionId) => epayco.subscriptions.get(subscriptionId);
+
 module.exports.cancelSubscriptionToPlan = (subscriptionId) =>
   epayco.subscriptions.cancel(subscriptionId);
 
