@@ -13,7 +13,6 @@ const roles = require('../middlewares/oauth/roles');
 const {
   authentication,
   authorizationCompany,
-  authenticationOrPublic,
   authorize,
 } = require('../middlewares/oauth/authentication');
 const {
@@ -264,7 +263,6 @@ async function getEstablishmentById(req, res) {
     if (req.payload.role === roles.company && companyId !== req.payload.roleId)
       return res.status(401).json({ message: 'Unauthorized' });
   }
-
   let establishment;
   try {
     establishment = await Establishment.findOne({ _id: establishmentId }, { __v: 0 }).orFail();
@@ -288,8 +286,7 @@ module.exports.getEstablishmentById = [
 
 async function updateEstablishmentById(req, res) {
   const { companyId, establishmentId } = req.params;
-  if (companyId !== req.id)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (companyId !== req.payload.roleId) return res.status(401).json({ message: 'Unauthorized' });
 
   const { body } = req;
   const data = {
@@ -297,7 +294,10 @@ async function updateEstablishmentById(req, res) {
   };
 
   try {
-    const updated = await Establishment.findOneAndUpdate({ _id: establishmentId }, data).orFail();
+    const updated = await Establishment.findOneAndUpdate(
+      { _id: establishmentId, 'company.companyId': mongoose.Types.ObjectId(companyId) },
+      data,
+    ).orFail();
 
     const establishmentUpdated = await Establishment.findOne({ _id: establishmentId }).orFail();
 
@@ -330,8 +330,7 @@ async function updateEstablishmentById(req, res) {
 }
 
 module.exports.updateEstablishmentById = [
-  authentication,
-  authorizationCompany,
+  authorize([roles.company]),
   validation(updateEstablishmentVal),
   updateEstablishmentById,
 ];
