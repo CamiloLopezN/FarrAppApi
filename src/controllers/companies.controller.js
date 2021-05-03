@@ -15,6 +15,7 @@ const {
   authorizationCompany,
   authorizationAdminOrCompany,
   authenticationOrPublic,
+  authorize,
 } = require('../middlewares/oauth/authentication');
 const Mailer = require('../mail/index');
 const { sendAccountValidator } = require('./utils');
@@ -115,10 +116,11 @@ Un usuario admin o company con los permisos solicita toda la información de un 
  */
 async function getCompanyById(req, res) {
   const { companyId } = req.params;
-  const id = authorizationAdminOrCompany(req, res, companyId);
+  if (req.payload.role === roles.company && req.payload.roleId !== companyId)
+    return res.status(401).json({ message: 'Unauthorized' });
 
   try {
-    const doc = await Company.findOne({ _id: id }, { __v: 0 });
+    const doc = await Company.findOne({ _id: companyId }, { __v: 0 });
     if (!doc) return res.status(404).json({ message: 'Resource not found' });
 
     return res.status(200).json({ message: doc });
@@ -131,7 +133,7 @@ async function getCompanyById(req, res) {
   }
 }
 
-module.exports.profile = [authentication, getCompanyById];
+module.exports.profile = [authorize([roles.company, roles.admin]), getCompanyById];
 
 /*
 Actualizar la información del perfil
@@ -484,8 +486,11 @@ async function getEventById(req, res) {
     return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
   let event;
   try {
-    if (req.id) {
-      if (companyId !== req.id) return res.status(403).json({ message: 'Forbidden' });
+    if (req.payload) {
+      const { roleId } = req.payload;
+      if (companyId !== roleId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
       const establishment = await Establishment.findOne({
         $and: [
           { _id: { $eq: establishmentId } },
@@ -511,7 +516,10 @@ async function getEventById(req, res) {
   return res.status(200).json({ message: event });
 }
 
-module.exports.getEventbyId = [authenticationOrPublic, getEventById];
+module.exports.getEventbyId = [
+  authorize([roles.guest, roles.company, roles.admin, roles.client]),
+  getEventById,
+];
 
 async function updateEvent(req, res) {
   const { companyId, establishmentId, eventId } = req.params;
