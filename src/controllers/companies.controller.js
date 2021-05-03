@@ -17,16 +17,18 @@ const {
   authenticationOrPublic,
   authorize,
 } = require('../middlewares/oauth/authentication');
-const Mailer = require('../mail/index');
-const { sendAccountValidator } = require('./utils');
+const {
+  sendAccountValidator,
+  sendEmailRegisterCompany,
+  sendCreatedUserByAdmin,
+} = require('./utils');
 
 /*
 Registrar una compañia
  */
 async function signUp(req, res) {
   const { email, password, companyName, address, contactNumber, nit } = req.body;
-  let generatePass;
-  /* try { */
+  if (!password && !req.payload) return res.status(403).json({ message: 'Forbidden' });
   const user = new User({
     email,
     password,
@@ -36,53 +38,64 @@ async function signUp(req, res) {
     isVerified: false,
   });
 
-  if (password) {
-    user.password = await user.encryptPassword(password);
-  } else {
-    generatePass = generatePasswordRand(8, 'alf');
-    user.password = await user.encryptPassword(generatePass);
+  if (req.payload) {
+    user.isActive = true;
   }
 
-  await user
-    .save()
-    .then(async (savedUser) => {
-      const company = new Company({
-        companyName,
-        address,
-        contactNumber,
-        nit,
-        // eslint-disable-next-line no-underscore-dangle
-        userId: savedUser._id,
-      });
-      await company
-        .save()
-        .then(() => {
-          Mailer.sendExpectVerifyCompany(email, companyName);
-          const payload = {
-            email,
-            companyName,
-          };
-          sendAccountValidator(
-            payload,
-            `${req.protocol}://${req.headers.host}/api/users/verify-account`,
-          );
-          return res.status(200).json({ message: 'Successful registration' });
-        })
-        .catch(async (err) => {
-          if (err instanceof mongoose.Error.ValidationError) {
-            // eslint-disable-next-line no-underscore-dangle
-            await User.remove({ _id: savedUser._id });
-            return res.status(400).json({ message: err });
-          }
-          return res.status(400).json({ message: err });
-        });
-    })
-    .catch((err) => {
-      return res.status(400).json({ message: err });
-    });
+  const passwordAux = password || generatePasswordRand(8, 'alf');
+  user.password = await user.encryptPassword(passwordAux);
+
+  const company = new Company({
+    companyName,
+    address,
+    contactNumber,
+    nit,
+    // eslint-disable-next-line no-underscore-dangle
+    userId: user._id,
+  });
+
+  try {
+    const foundCompany = await User.findOne({ email });
+    if (!foundCompany) {
+      await company.save();
+      await user.save();
+    }
+    sendAccountValidator(
+      {
+        email,
+        username: companyName,
+      },
+      `${req.protocol}://${req.headers.host}/api/users/verify-account`,
+    );
+    if (!req.payload) {
+      sendEmailRegisterCompany(email, companyName);
+    }
+
+    if (req.payload && !password) {
+      sendCreatedUserByAdmin(email, companyName, passwordAux);
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-underscore-dangle
+    await User.deleteOne({ _id: user._id });
+    // eslint-disable-next-line no-underscore-dangle
+    await Company.deleteOne({ _id: company._id });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res
+        .status(400)
+        .json({ message: 'Incomplete or bad formatted client data', errors: err.errors });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  return res.status(200).json({
+    message: 'Successful operation',
+  });
 }
 
-module.exports.signUp = [validation(signUpVal), signUp];
+module.exports.signUp = [
+  authentication,
+  authorize([roles.guest, roles.admin]),
+  validation(signUpVal),
+  signUp,
+];
 
 /*
 Un admin obtiene la información de las compañias
@@ -179,6 +192,7 @@ async function registerEstablishment(req, res) {
     const company = await Company.findOne({ _id: req.id }, { _id: 1, companyName: 1 }).orFail();
     establishment.isActive = true;
     establishment.averageRating = 0;
+    establishment.followers = 0;
     establishment.company = {
       // eslint-disable-next-line no-underscore-dangle
       companyId: company._id,
