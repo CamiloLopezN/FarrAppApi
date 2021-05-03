@@ -144,7 +144,7 @@ async function getCompanyById(req, res) {
   }
 }
 
-module.exports.profile = [authorize([roles.company, roles.admin]), getCompanyById];
+module.exports.profile = [authentication, authorize([roles.company, roles.admin]), getCompanyById];
 
 /*
 Actualizar la información del perfil
