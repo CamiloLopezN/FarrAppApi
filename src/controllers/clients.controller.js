@@ -9,9 +9,8 @@ const { establishmentId } = require('../middlewares/validations/establishment.jo
 const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { authorize } = require('../middlewares/oauth/authentication');
-const { generatePasswordRand } = require('../utilities/generatePass');
 const calculation = require('../utilities/calculations');
-const { sendAccountValidator, sendCreatedUserByAdmin } = require('./utils');
+const { sendAccountValidator, sendCreatedUserByAdmin, randomPassword } = require('./utils');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
@@ -26,7 +25,7 @@ const postClient = async (req, res) => {
 
   if (!password && !req.payload) return res.status(403).json({ message: 'Forbidden' });
 
-  const passwordAux = password || generatePasswordRand(8, 'alf');
+  const passwordAux = password || randomPassword(8, 'alf');
   user.password = await user.encryptPassword(passwordAux);
 
   const month = birthdate.split('-')[1] - 1;

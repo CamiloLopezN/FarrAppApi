@@ -5,11 +5,12 @@ const { User, Company, Admin, Client } = require('../models/entity.model');
 const { generateToken } = require('../middlewares/oauth/authentication');
 const roles = require('../middlewares/oauth/roles');
 const utils = require('./utils');
-const { generatePasswordRand } = require('../utilities/generatePass');
 const { authorize } = require('../middlewares/oauth/authentication');
 const { validatePass } = require('./password.controller');
+const validator = require('../middlewares/validations/validation');
+const userValidation = require('../middlewares/validations/user.joi');
 
-module.exports.login = async (req, res) => {
+const login = async (req, res) => {
   const { email, password } = req.body;
   let token;
   const payload = {};
@@ -77,19 +78,19 @@ module.exports.login = async (req, res) => {
   }
   return res.status(200).json({ token, userInfo });
 };
+module.exports.login = [validator(userValidation.login), login];
 
-const reqDeactiveUser = async (req, res) => {
+const reqDeactivateUser = async (req, res) => {
   try {
-    const { userId } = req.payload;
-    const { idToReqDeactive } = req.params;
-    if (userId !== idToReqDeactive)
+    const { userId } = req.params;
+    if (req.payload.userId !== userId)
       return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
     const data = {
       $set: {
         hasReqDeactivation: true,
       },
     };
-    const update = await User.findOneAndUpdate({ _id: idToReqDeactive }, data);
+    const update = await User.findOneAndUpdate({ _id: userId }, data);
     if (!update) return res.status(404).json({ message: 'Resource not found' });
     return res.status(200).json({ message: 'Operación realizada satisfactoriamente!' });
   } catch (error) {
@@ -100,37 +101,23 @@ const reqDeactiveUser = async (req, res) => {
     return res.status(500).json({ message: `internal server error  ${error}` });
   }
 };
-module.exports.reqDeactiveUser = [
+module.exports.reqDeactivateUser = [
   authorize([roles.admin, roles.client, roles.company]),
-  reqDeactiveUser,
+  reqDeactivateUser,
 ];
 
-// eslint-disable-next-line consistent-return
 const recoverPassword = async (req, res) => {
   const { email } = req.body;
   const foundUser = await User.findOne({ email });
-
-  if (!foundUser)
-    return res.status(404).json({
-      message: 'Se produjo un error, el correo ingresado no se encuentra registrado',
-    });
-  if (!foundUser.isActive)
-    return res.status(403).json({ message: 'Esta cuenta se encuentra desactivada.' });
-  if (foundUser.hasReqDeactivation)
-    return res
-      .status(403)
-      .json({ message: 'Esta cuenta se encuentra en proceso de desativación.' });
-
-  const password = generatePasswordRand(8, 'alf');
-  const data = { $set: { password } };
-  data.password = await foundUser.encryptPassword(password);
-  await User.updateOne({ email }, data, (err) => {
-    if (err) return res.status(500).json({ message: 'Se produjo un problema en la operación.' });
+  if (foundUser) {
+    const password = utils.randomPassword(8, 'alf');
+    const encryptedPassword = await foundUser.encryptPassword(password);
+    await User.updateOne({ email }, { $set: { password: encryptedPassword } });
     utils.sendRecoverPassword(email, password);
-    return res.status(200).json({ message: 'Correo de recuperación enviado.' });
-  });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
 };
-module.exports.recoverPassword = [recoverPassword];
+module.exports.recoverPassword = [validator(userValidation.email), recoverPassword];
 
 const verifyAccount = async (req, res) => {
   const { token } = req.params;
@@ -220,6 +207,7 @@ const updateUser = async (req, res) => {
 };
 module.exports.updateUser = [
   authorize([roles.admin, roles.company, roles.client]),
+  validator(userValidation.login),
   validatePass,
   updateUser,
 ];
@@ -282,5 +270,4 @@ const refreshToken = async (req, res) => {
   }
   return res.status(200).json({ token, userInfo });
 };
-
 module.exports.refreshToken = [refreshToken];

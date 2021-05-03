@@ -69,13 +69,12 @@ const getAdminById = async (req, res) => {
 module.exports.getAdminById = [authorize([roles.admin]), getAdminById];
 
 const updateProfileAdmin = async (req, res) => {
-  let update;
   try {
     const { adminId } = req.params;
     const data = {
       $set: req.body,
     };
-    update = await Admin.findOneAndUpdate({ _id: adminId }, data).orFail();
+    await Admin.findOneAndUpdate({ _id: adminId }, data).orFail();
   } catch (error) {
     if (error instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Resource not found' });
