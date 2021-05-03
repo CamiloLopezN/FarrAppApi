@@ -2,7 +2,7 @@ const { Router } = require('express');
 
 const router = Router();
 const {
-  getEventbyId,
+  getEventById,
   getEventsByEstablishment,
   getEstablishmentById,
   getPreviewEstablishmentsOfCompany,
@@ -19,7 +19,7 @@ const {
   deleteEstablishmentById,
 } = require('../controllers/companies.controller');
 
-router.get('/:companyId/establishments/:establishmentId/events/:eventId', getEventbyId);
+router.get('/:companyId/establishments/:establishmentId/events/:eventId', getEventById);
 router.get('/:companyId/establishments/:establishmentId/events', getEventsByEstablishment);
 router.get('/:companyId/establishments/:establishmentId', getEstablishmentById);
 router.get('/:companyId/establishments', getPreviewEstablishmentsOfCompany);

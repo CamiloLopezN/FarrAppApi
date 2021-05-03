@@ -513,7 +513,7 @@ async function getEventById(req, res) {
   return res.status(200).json({ message: event });
 }
 
-module.exports.getEventbyId = [
+module.exports.getEventById = [
   authorize([roles.guest, roles.company, roles.admin, roles.client]),
   getEventById,
 ];
