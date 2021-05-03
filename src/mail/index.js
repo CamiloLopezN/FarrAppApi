@@ -31,17 +31,94 @@ function sendValidation(userMail, token, validationURL) {
   const subject = `Valida tu cuenta en FarrApp`;
   const text = `Se ha registrado una cuenta de FarrApp con este correo.\n Para validar tu cuenta, ingresa al siguiente enlace:\n ${validationURL}${token} \n  Si no fuiste tú ignora este correo`;
   const url = `${validationURL}/${token}`;
-  const html = `<html>
-       <body>
-           <p>Se ha registrado una cuenta de FarrApp con este correo.<br>
-               Para validar tu cuenta, ingresa al siguiente enlace:<br>
-           </p>
-           <a href=${url}>Validar cuenta</a>
-           <p>
-           Si no fuiste tú ignora este correo
-           </p>
-       </body>
-       </html>`;
+  const html = `<!DOCTYPE html>
+  <html>
+  
+  <head>
+      <link rel="preconnect" href="https://fonts.gstatic.com">
+      <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;1,800&display=swap" rel="stylesheet">
+      <title>Validación</title>
+      <style>
+          #div1 {
+              height: 30vh;
+              width: 1;
+              text-align: center;
+              background-color: rgb(255, 255, 255)
+          }
+  
+          #div2 {
+              height: 32vh;
+              width: 1;
+              background-color: rgb(255, 255, 255);
+              text-align: center;
+          }
+  
+          #div3 {
+              height: 30vh;
+              width: 1;
+              text-align: center;
+              background-color: rgb(255, 255, 255)
+          }
+  
+          @font-face {
+              font-family: "Lovelo Negra";
+              font-style: normal;
+              font-weight: normal;
+              src: Local("?"), url("./resources/LOVELO\ BLACK.OTF")format("truetype");
+          }
+  
+          #title {
+              text-align: center;
+              font-size: 40px;
+              color: rgb(199, 62, 126);
+              font-family: 'Roboto', sans-serif;
+          }
+  
+          #farrapp {
+              padding-top: 10vh;
+              text-align: center;
+              font-size: 120px;
+              font-family: Lovelo Negra;
+              color: rgb(0, 0, 0);
+              font-family: "Lovelo Negra";
+          }
+  
+          #m1 {
+              font-size: 20px;
+              padding-top: 5vh;
+              text-align: center;
+              font-family: 'Open Sans', sans-serif;
+              ;
+          }
+  
+          #m2 {
+              padding-top: 5vh;
+              font-size: 20px;
+              text-align: center;
+              font-family: 'Open Sans', sans-serif;
+              ;
+          }
+      </style>
+  </head>
+  
+  <body>
+  
+      <div id="div1">
+          <h2 id="farrapp">FARRAPP</h2>
+      </div>
+  
+      <div id="div2">
+          <h3 id="m1">Se ha registrado una cuenta de FarrApp con este correo electrónico, <br>para verificar tu cuenta,
+              dale click al siguiente enlace:</h3>
+          <a href=${url} id="title">Verifica tu cuenta</a>
+          <h3 id="m2">Si no fuiste tú ignora este correo</h3>
+      </div>
+  
+  
+      <div id="div3"></div>
+  </body>
+  
+  </html>`;
   sendMail(userMail, subject, text, html);
 }
 

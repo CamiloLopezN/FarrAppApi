@@ -156,8 +156,7 @@ const verifyAccount = async (req, res) => {
 
     return res.status(500).json({ message: `Internal server error` });
   }
-
-  return res.status(200).json({ message: 'Account Verified' });
+  return res.status(200).json({ message: 'Successful peration' });
 };
 module.exports.verifyAccount = [verifyAccount];
 
