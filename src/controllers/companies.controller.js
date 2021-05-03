@@ -400,6 +400,8 @@ async function registerEvent(req, res) {
       establishmentName: establishmentSearch.establishmentName,
     };
     event.status = 'Inactivo';
+    event.interested = 0;
+    event.averageRating = 0;
     const eventSaved = await event.save();
     const eventPreview = {
       // eslint-disable-next-line no-underscore-dangle
