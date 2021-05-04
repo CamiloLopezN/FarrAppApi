@@ -124,9 +124,9 @@ const getClientAccounts = async (req, res) => {
     },
     {
       $match: {
-        'user.isVerified': isVerified,
-        'user.hasReqDeactivation': hasReqDeactivation,
-        'user.isActive': isActive,
+        'user.isVerified': isVerified === 'true',
+        'user.hasReqDeactivation': hasReqDeactivation === 'true',
+        'user.isActive': isActive === 'true',
       },
     },
   ];
@@ -169,9 +169,9 @@ const getCompanyAccounts = async (req, res) => {
     },
     {
       $match: {
-        'user.isVerified': isVerified,
-        'user.hasReqDeactivation': hasReqDeactivation,
-        'user.isActive': isActive,
+        'user.isVerified': isVerified === 'true',
+        'user.hasReqDeactivation': hasReqDeactivation === 'true',
+        'user.isActive': isActive === 'true',
       },
     },
   ];
