@@ -299,6 +299,11 @@ const updateEstablishmentById = async (req, res) => {
       { _id: companyId, 'establishments.establishmentId': updated._id },
       { $set: { 'establishments.$': establishmentPreview } },
     ).orFail();
+
+    await Client.updateOne(
+      { 'follows.establishmentId': establishmentPreview.establishmentId },
+      { $set: { 'follows.$': establishmentPreview } },
+    ).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
