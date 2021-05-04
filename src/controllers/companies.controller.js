@@ -300,7 +300,7 @@ const updateEstablishmentById = async (req, res) => {
       { $set: { 'establishments.$': establishmentPreview } },
     ).orFail();
 
-    await Client.updateOne(
+    await Client.updateMany(
       { 'follows.establishmentId': establishmentPreview.establishmentId },
       { $set: { 'follows.$': establishmentPreview } },
     ).orFail();
