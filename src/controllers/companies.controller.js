@@ -1,6 +1,6 @@
 const mongoose = require('../config/config.database');
 
-const { Company, Establishment, User, Event } = require('../models/entity.model');
+const { Company, Establishment, User, Event, Client } = require('../models/entity.model');
 const {
   postEstablishmentVal,
   updateEstablishmentVal,
@@ -574,6 +574,11 @@ const updateEvent = async (req, res) => {
     await Company.updateOne(
       { _id: companyId, 'events.eventId': eventPreview.eventId },
       { $set: { 'events.$': eventPreview } },
+    ).orFail();
+
+    await Client.updateOne(
+      { 'interests.eventId': eventPreview.eventId },
+      { $set: { 'interests.$': eventPreview } },
     ).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)

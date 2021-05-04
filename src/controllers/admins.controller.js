@@ -53,7 +53,10 @@ const getAdminById = async (req, res) => {
   let foundAdmin;
   try {
     const { adminId } = req.params;
-    foundAdmin = await Admin.find({ _id: adminId }, { firstName: 1, lastName: 1, _id: 0 }).orFail();
+    foundAdmin = await Admin.findOne(
+      { _id: adminId },
+      { firstName: 1, lastName: 1, _id: 0 },
+    ).orFail();
   } catch (error) {
     if (error instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Admin not found' });
