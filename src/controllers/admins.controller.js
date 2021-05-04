@@ -7,7 +7,6 @@ const { Admin, User } = require('../models/entity.model');
 const roles = require('../middlewares/oauth/roles');
 const { authorize } = require('../middlewares/oauth/authentication');
 
-// eslint-disable-next-line consistent-return
 const postAdmin = async (req, res) => {
   const { email, password, firstName, lastName } = req.body;
   try {
