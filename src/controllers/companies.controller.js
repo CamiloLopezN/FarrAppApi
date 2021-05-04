@@ -581,7 +581,7 @@ const updateEvent = async (req, res) => {
       { $set: { 'events.$': eventPreview } },
     ).orFail();
 
-    await Client.updateOne(
+    await Client.updateMany(
       { 'interests.eventId': eventPreview.eventId },
       { $set: { 'interests.$': eventPreview } },
     ).orFail();
