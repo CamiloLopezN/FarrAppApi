@@ -85,7 +85,6 @@ const updateProfileAdmin = async (req, res) => {
   }
   return res.status(200).json({ message: 'Successful operation' });
 };
-
 module.exports.updateProfileAdmin = [
   authorize([roles.admin]),
   validation(updateAdmin),
