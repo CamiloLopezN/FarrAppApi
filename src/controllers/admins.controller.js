@@ -3,7 +3,7 @@ const mongoose = require('../config/config.database');
 const validation = require('../middlewares/validations/validation');
 const { postAdminVal, updateAdmin } = require('../middlewares/validations/admin.joi');
 const { validatePass } = require('./password.controller');
-const { Admin, User } = require('../models/entity.model');
+const { Admin, User, Client, Company } = require('../models/entity.model');
 const roles = require('../middlewares/oauth/roles');
 const { authorize } = require('../middlewares/oauth/authentication');
 
@@ -90,3 +90,93 @@ module.exports.updateProfileAdmin = [
   validation(updateAdmin),
   updateProfileAdmin,
 ];
+
+const getClientAccounts = async (req, res) => {
+  const {
+    isVerified = true,
+    hasReqDeactivation = false,
+    isActive = true,
+    page = 1,
+    limit = 10,
+  } = req.query;
+  // TODO remove unnecessary user info
+  const aggregateQuery = [
+    {
+      $lookup: {
+        from: User.collection.name,
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+    { $unwind: '$userInfo' },
+    {
+      $project: {
+        firstName: 1,
+        lastName: 1,
+        birthdate: 1,
+        gender: 1,
+        user: '$userInfo',
+      },
+    },
+    {
+      $match: {
+        'user.isVerified': isVerified,
+        'user.hasReqDeactivation': hasReqDeactivation,
+        'user.isActive': isActive,
+      },
+    },
+  ];
+  const clientsAggregate = Client.aggregate(aggregateQuery);
+  const clientAccounts = await Client.aggregatePaginate(clientsAggregate, {
+    page,
+    limit,
+  });
+  return res.status(200).json(clientAccounts);
+};
+module.exports.getClientAccounts = [authorize([roles.admin]), getClientAccounts];
+
+const getCompanyAccounts = async (req, res) => {
+  const {
+    isVerified = true,
+    hasReqDeactivation = false,
+    isActive = true,
+    page = 1,
+    limit = 10,
+  } = req.query;
+  // TODO remove unnecessary user info
+  const aggregateQuery = [
+    {
+      $lookup: {
+        from: User.collection.name,
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+    { $unwind: '$userInfo' },
+    {
+      $project: {
+        companyName: 1,
+        address: 1,
+        contactNumber: 1,
+        nit: 1,
+        user: '$userInfo',
+      },
+    },
+    {
+      $match: {
+        'user.isVerified': isVerified,
+        'user.hasReqDeactivation': hasReqDeactivation,
+        'user.isActive': isActive,
+      },
+    },
+  ];
+  const companiesAggregate = Company.aggregate(aggregateQuery);
+  const companyAccounts = await Company.aggregatePaginate(companiesAggregate, {
+    page,
+    limit,
+  });
+  return res.status(200).json(companyAccounts);
+};
+module.exports.getCompanyAccounts = [authorize([roles.admin]), getCompanyAccounts];

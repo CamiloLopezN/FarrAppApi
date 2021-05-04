@@ -3,8 +3,10 @@ const { Router } = require('express');
 const router = Router();
 const adminsController = require('../controllers/admins.controller');
 
-router.post('/', adminsController.postAdmin);
+router.get('/clients', adminsController.getClientAccounts);
+router.get('/companies', adminsController.getCompanyAccounts);
 router.get('/:adminId', adminsController.getAdminById);
 router.post('/:adminId/update', adminsController.updateProfileAdmin);
+router.post('/', adminsController.postAdmin);
 
 module.exports = router;
