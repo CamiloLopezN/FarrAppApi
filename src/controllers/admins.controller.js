@@ -119,7 +119,7 @@ const getCompanyById = async (req, res) => {
   let company;
   try {
     company = await Company.findOne({ _id: companyId })
-      .select(['companyName', 'contactNumber', 'nit'])
+      .select(['companyName', 'contactNumber', 'nit', 'address'])
       .populate('userId', ['email', 'hasReqDeactivation', 'isActive', 'isVerified'], User)
       .orFail();
   } catch (error) {
