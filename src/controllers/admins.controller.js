@@ -94,6 +94,46 @@ module.exports.updateProfileAdmin = [
   updateProfileAdmin,
 ];
 
+const getClientById = async (req, res) => {
+  const { clientId } = req.params;
+  let client;
+  try {
+    client = await Client.findOne({ _id: clientId })
+      .select(['userId', 'firstName', 'lastName', 'birthdate', 'gender'])
+      .populate('userId', ['email', 'hasReqDeactivation', 'isActive', 'isVerified'], User)
+      .orFail();
+  } catch (error) {
+    if (
+      error instanceof mongoose.Error.DocumentNotFoundError ||
+      error instanceof mongoose.Error.CastError
+    )
+      return res.status(404).json({ message: 'Client not found' });
+    return res.status(503).json({ message: 'Service unavailable', error });
+  }
+  return res.status(200).json(client);
+};
+module.exports.getClientById = [authorize([roles.admin]), getClientById];
+
+const getCompanyById = async (req, res) => {
+  const { companyId } = req.params;
+  let company;
+  try {
+    company = await Company.findOne({ _id: companyId })
+      .select(['companyName', 'contactNumber', 'nit'])
+      .populate('userId', ['email', 'hasReqDeactivation', 'isActive', 'isVerified'], User)
+      .orFail();
+  } catch (error) {
+    if (
+      error instanceof mongoose.Error.DocumentNotFoundError ||
+      error instanceof mongoose.Error.CastError
+    )
+      return res.status(404).json({ message: 'Company not found' });
+    return res.status(503).json({ message: 'Service unavailable', error });
+  }
+  return res.status(200).json(company);
+};
+module.exports.getCompanyById = [authorize([roles.admin]), getCompanyById];
+
 const getClientAccounts = async (req, res) => {
   const {
     isVerified = true,
