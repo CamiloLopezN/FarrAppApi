@@ -579,7 +579,7 @@ const updateEvent = async (req, res) => {
     await Client.updateOne(
       { 'interests.eventId': eventPreview.eventId },
       { $set: { 'interests.$': eventPreview } },
-    ).orFail();
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
