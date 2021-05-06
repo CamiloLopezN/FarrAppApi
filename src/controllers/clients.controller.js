@@ -217,7 +217,10 @@ const interestForEvent = async (req, res) => {
       await Client.updateOne(queryFind, {
         $pull: { interests: { eventId: req.body.eventId } },
       }).orFail();
-      await calculation.deductInterested(req.body.eventId);
+      const event = await Event.findOne({ _id: req.body.eventId }, { _id: 0 });
+      if (event) {
+        await calculation.deductInterested(req.body.eventId);
+      }
     }
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
