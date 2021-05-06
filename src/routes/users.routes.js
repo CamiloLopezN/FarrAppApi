@@ -5,6 +5,7 @@ const userController = require('../controllers/users.controller');
 
 router.post('/login', userController.login);
 router.get('/refresh-token', userController.refreshToken);
+router.post('/:userId/account-status', userController.postUserAccount);
 router.post('/request-deactivation/:userId', userController.reqDeactivateUser);
 router.post('/recover-password', userController.recoverPassword);
 router.get('/verify-account/:token', userController.verifyAccount);

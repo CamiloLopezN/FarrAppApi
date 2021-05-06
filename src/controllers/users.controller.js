@@ -271,3 +271,25 @@ const refreshToken = async (req, res) => {
   return res.status(200).json({ token, userInfo });
 };
 module.exports.refreshToken = [refreshToken];
+
+const postUserAccount = async (req, res) => {
+  const { userId } = req.params;
+  const { isVerified, hasReqDeactivation, isActive } = req.body;
+  if (req.payload.role !== roles.admin && req.payload.userId !== userId)
+    return res.status(403).json({ message: 'Forbidden' });
+  try {
+    const data = { $set: { isVerified, hasReqDeactivation, isActive } };
+    await User.findOneAndUpdate({ _id: userId }, data).orFail();
+  } catch (err) {
+    if (
+      err instanceof mongoose.Error.DocumentNotFoundError ||
+      err instanceof mongoose.Error.CastError
+    )
+      return res.status(404).json({ message: 'Resource not found' });
+    if (err instanceof mongoose.Error.ValidationError)
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  return res.status(200).json({ message: 'Successful operation' });
+};
+module.exports.postUserAccount = [authorize(roles.admin), postUserAccount];
