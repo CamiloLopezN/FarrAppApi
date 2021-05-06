@@ -299,6 +299,11 @@ const updateEstablishmentById = async (req, res) => {
       { _id: companyId, 'establishments.establishmentId': updated._id },
       { $set: { 'establishments.$': establishmentPreview } },
     ).orFail();
+
+    await Client.updateMany(
+      { 'follows.establishmentId': establishmentPreview.establishmentId },
+      { $set: { 'follows.$': establishmentPreview } },
+    ).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
@@ -576,10 +581,10 @@ const updateEvent = async (req, res) => {
       { $set: { 'events.$': eventPreview } },
     ).orFail();
 
-    await Client.updateOne(
+    await Client.updateMany(
       { 'interests.eventId': eventPreview.eventId },
       { $set: { 'interests.$': eventPreview } },
-    ).orFail();
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
