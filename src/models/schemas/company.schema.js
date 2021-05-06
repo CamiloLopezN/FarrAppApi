@@ -1,11 +1,10 @@
-const uniqueValidator = require('mongoose-unique-validator');
 const { Schema } = require('../../config/config.database');
 const eventPreviewSchema = require('./eventPreview.schema');
 const establishmentPreviewSchema = require('./establishmentPreview.schema');
 
 const companySchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, required: true, unique: true, ref: 'Users' },
+    userId: { type: Schema.Types.ObjectId, required: true, unique: true, ref: 'User' },
     companyName: { type: String, unique: true, required: true },
     address: { type: String, required: true },
     contactNumber: { type: String, required: true },
@@ -19,6 +18,8 @@ const companySchema = new Schema(
   },
 );
 
-companySchema.plugin(uniqueValidator);
+companySchema.plugin(require('mongoose-unique-validator'));
+companySchema.plugin(require('mongoose-paginate-v2'));
+companySchema.plugin(require('mongoose-aggregate-paginate-v2'));
 
 module.exports = companySchema;

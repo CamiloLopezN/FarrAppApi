@@ -3,11 +3,10 @@ const mongoose = require('../config/config.database');
 const validation = require('../middlewares/validations/validation');
 const { postAdminVal, updateAdmin } = require('../middlewares/validations/admin.joi');
 const { validatePass } = require('./password.controller');
-const { Admin, User } = require('../models/entity.model');
+const { Admin, User, Client, Company } = require('../models/entity.model');
 const roles = require('../middlewares/oauth/roles');
 const { authorize } = require('../middlewares/oauth/authentication');
 
-// eslint-disable-next-line consistent-return
 const postAdmin = async (req, res) => {
   const { email, password, firstName, lastName } = req.body;
   try {
@@ -89,9 +88,138 @@ const updateProfileAdmin = async (req, res) => {
   }
   return res.status(200).json({ message: 'Successful operation' });
 };
-
 module.exports.updateProfileAdmin = [
   authorize([roles.admin]),
   validation(updateAdmin),
   updateProfileAdmin,
 ];
+
+const getClientById = async (req, res) => {
+  const { clientId } = req.params;
+  let client;
+  try {
+    client = await Client.findOne({ _id: clientId })
+      .select(['userId', 'firstName', 'lastName', 'birthdate', 'gender'])
+      .populate('userId', ['email', 'hasReqDeactivation', 'isActive', 'isVerified'], User)
+      .orFail();
+  } catch (error) {
+    if (
+      error instanceof mongoose.Error.DocumentNotFoundError ||
+      error instanceof mongoose.Error.CastError
+    )
+      return res.status(404).json({ message: 'Client not found' });
+    return res.status(503).json({ message: 'Service unavailable', error });
+  }
+  return res.status(200).json(client);
+};
+module.exports.getClientById = [authorize([roles.admin]), getClientById];
+
+const getCompanyById = async (req, res) => {
+  const { companyId } = req.params;
+  let company;
+  try {
+    company = await Company.findOne({ _id: companyId })
+      .select(['companyName', 'contactNumber', 'nit', 'address'])
+      .populate('userId', ['email', 'hasReqDeactivation', 'isActive', 'isVerified'], User)
+      .orFail();
+  } catch (error) {
+    if (
+      error instanceof mongoose.Error.DocumentNotFoundError ||
+      error instanceof mongoose.Error.CastError
+    )
+      return res.status(404).json({ message: 'Company not found' });
+    return res.status(503).json({ message: 'Service unavailable', error });
+  }
+  return res.status(200).json(company);
+};
+module.exports.getCompanyById = [authorize([roles.admin]), getCompanyById];
+
+const getClientAccounts = async (req, res) => {
+  const {
+    isVerified = true,
+    hasReqDeactivation = false,
+    isActive = true,
+    page = 1,
+    limit = 10,
+  } = req.query;
+  // TODO remove unnecessary user info
+  const aggregateQuery = [
+    {
+      $lookup: {
+        from: User.collection.name,
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+    { $unwind: '$userInfo' },
+    {
+      $project: {
+        firstName: 1,
+        lastName: 1,
+        birthdate: 1,
+        gender: 1,
+        user: '$userInfo',
+      },
+    },
+    {
+      $match: {
+        'user.isVerified': isVerified === 'true',
+        'user.hasReqDeactivation': hasReqDeactivation === 'true',
+        'user.isActive': isActive === 'true',
+      },
+    },
+  ];
+  const clientsAggregate = Client.aggregate(aggregateQuery);
+  const clientAccounts = await Client.aggregatePaginate(clientsAggregate, {
+    page,
+    limit,
+  });
+  return res.status(200).json(clientAccounts);
+};
+module.exports.getClientAccounts = [authorize([roles.admin]), getClientAccounts];
+
+const getCompanyAccounts = async (req, res) => {
+  const {
+    isVerified = true,
+    hasReqDeactivation = false,
+    isActive = true,
+    page = 1,
+    limit = 10,
+  } = req.query;
+  // TODO remove unnecessary user info
+  const aggregateQuery = [
+    {
+      $lookup: {
+        from: User.collection.name,
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+    { $unwind: '$userInfo' },
+    {
+      $project: {
+        companyName: 1,
+        address: 1,
+        contactNumber: 1,
+        nit: 1,
+        user: '$userInfo',
+      },
+    },
+    {
+      $match: {
+        'user.isVerified': isVerified === 'true',
+        'user.hasReqDeactivation': hasReqDeactivation === 'true',
+        'user.isActive': isActive === 'true',
+      },
+    },
+  ];
+  const companiesAggregate = Company.aggregate(aggregateQuery);
+  const companyAccounts = await Company.aggregatePaginate(companiesAggregate, {
+    page,
+    limit,
+  });
+  return res.status(200).json(companyAccounts);
+};
+module.exports.getCompanyAccounts = [authorize([roles.admin]), getCompanyAccounts];
