@@ -166,7 +166,13 @@ const followEstablishment = async (req, res) => {
       await Client.updateOne(queryFind, {
         $pull: { follows: { establishmentId: req.body.establishmentId } },
       }).orFail();
-      await calculation.deductFollower(req.body.establishmentId);
+      const establishment = await Establishment.findOne(
+        { _id: req.body.establishmentId },
+        { _id: 1 },
+      );
+      if (establishment) {
+        await calculation.deductFollower(req.body.establishmentId);
+      }
     }
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
