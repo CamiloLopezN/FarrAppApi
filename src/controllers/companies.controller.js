@@ -303,7 +303,7 @@ const updateEstablishmentById = async (req, res) => {
     await Client.updateMany(
       { 'follows.establishmentId': establishmentPreview.establishmentId },
       { $set: { 'follows.$': establishmentPreview } },
-    ).orFail();
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
