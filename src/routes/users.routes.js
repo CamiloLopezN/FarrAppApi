@@ -3,14 +3,14 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/users.controller');
 
-router.post('/login', userController.login);
-router.get('/refresh-token', userController.refreshToken);
-router.post('/:userId/account-status', userController.postUserAccount);
-router.post('/request-deactivation/:userId', userController.reqDeactivateUser);
-router.post('/recover-password', userController.recoverPassword);
 router.get('/verify-account/:token', userController.verifyAccount);
+router.get('/refresh-token', userController.refreshToken);
 router.get('/:userId', userController.getUserById);
-router.post('/:userId/update', userController.updateUser);
 router.get('/', userController.getUsers);
+router.post('/login', userController.login);
+router.post('/recover-password', userController.recoverPassword);
+router.post('/request-deactivation/:userId', userController.reqDeactivateUser);
+router.post('/:userId/account-status', userController.postUserAccount);
+router.post('/:userId/update', userController.updateUser);
 
 module.exports = router;
