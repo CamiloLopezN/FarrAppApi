@@ -20,7 +20,6 @@ const getCustomers = async (req, res) => {
   const customers = await payments.listCustomers();
   return res.status(200).json(customers);
 };
-
 module.exports.listCustomers = [authorize([roles.admin]), getCustomers];
 
 const postCustomer = async (req, res) => {
@@ -70,7 +69,6 @@ const postCustomer = async (req, res) => {
     name: customer.data.name,
   });
 };
-
 module.exports.postCompanyCustomer = [authorize([roles.company, roles.admin]), postCustomer];
 
 const subscribeToPlan = async (req, res) => {
@@ -86,7 +84,6 @@ const subscribeToPlan = async (req, res) => {
   }
   return res.status(200).json(suscrib);
 };
-
 module.exports.postSubscription = [authorize([roles.admin, roles.company]), subscribeToPlan];
 
 const cancelSubscription = async (req, res) => {
@@ -103,7 +100,6 @@ const cancelSubscription = async (req, res) => {
   }
   return res.status(200).json(cancellation);
 };
-
 module.exports.getCancelSubscription = [
   authorize([roles.admin, roles.company]),
   cancelSubscription,
@@ -129,7 +125,6 @@ const getPlans = async (req, res) => {
   }
   return res.status(200).json(treatedPlans);
 };
-
 module.exports.getPlans = [
   authorize([roles.company, roles.admin, roles.client, roles.guest]),
   getPlans,
@@ -147,7 +142,6 @@ const getCustomerById = async (req, res) => {
   }
   return res.status(200).json(customer.data);
 };
-
 module.exports.getCustomer = [authorize([roles.company, roles.admin]), getCustomerById];
 
 const changeDefaultCard = async (req, res) => {
@@ -168,7 +162,6 @@ const changeDefaultCard = async (req, res) => {
   }
   return res.status(200).json(defaultCard.data);
 };
-
 module.exports.changeDefaultCard = [authorize([roles.admin, roles.company]), changeDefaultCard];
 
 const addCustomerCard = async (req, res) => {
@@ -186,7 +179,6 @@ const addCustomerCard = async (req, res) => {
   }
   return res.status(201).json({ message: 'Card added successfully' });
 };
-
 module.exports.addCustomerCard = [authorize([roles.admin, roles.company]), addCustomerCard];
 
 const removeCustomerCard = async (req, res) => {
@@ -202,5 +194,4 @@ const removeCustomerCard = async (req, res) => {
   }
   return res.status(200).json({ message: 'Card successfully removed' });
 };
-
 module.exports.removeCustomerCard = [authorize([roles.admin, roles.company]), removeCustomerCard];
