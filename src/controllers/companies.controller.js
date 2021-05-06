@@ -1,6 +1,6 @@
 const mongoose = require('../config/config.database');
 
-const { Company, Establishment, User, Event } = require('../models/entity.model');
+const { Company, Establishment, User, Event, Client } = require('../models/entity.model');
 const {
   postEstablishmentVal,
   updateEstablishmentVal,
@@ -8,10 +8,10 @@ const {
 const { signUpVal, updateCompany } = require('../middlewares/validations/company.joi');
 const { postEventVal, updateEventVal } = require('../middlewares/validations/event.joi');
 const validation = require('../middlewares/validations/validation');
-const { generatePasswordRand } = require('../utilities/generatePass');
 const roles = require('../middlewares/oauth/roles');
 const { authorize } = require('../middlewares/oauth/authentication');
 const {
+  randomPassword,
   sendAccountValidator,
   sendEmailRegisterCompany,
   sendCreatedUserByAdmin,
@@ -36,7 +36,7 @@ const signUp = async (req, res) => {
     user.isActive = true;
   }
 
-  const passwordAux = password || generatePasswordRand(8, 'alf');
+  const passwordAux = password || randomPassword(8, 'alf');
   user.password = await user.encryptPassword(passwordAux);
 
   const company = new Company({
@@ -502,7 +502,7 @@ const getEventById = async (req, res) => {
   }
   return res.status(200).json({ message: event });
 };
-module.exports.getEventbyId = [
+module.exports.getEventById = [
   authorize([roles.guest, roles.company, roles.admin, roles.client]),
   getEventById,
 ];
@@ -574,6 +574,11 @@ const updateEvent = async (req, res) => {
     await Company.updateOne(
       { _id: companyId, 'events.eventId': eventPreview.eventId },
       { $set: { 'events.$': eventPreview } },
+    ).orFail();
+
+    await Client.updateOne(
+      { 'interests.eventId': eventPreview.eventId },
+      { $set: { 'interests.$': eventPreview } },
     ).orFail();
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)

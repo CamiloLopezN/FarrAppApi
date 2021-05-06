@@ -9,9 +9,8 @@ const { establishmentId } = require('../middlewares/validations/establishment.jo
 const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { authorize } = require('../middlewares/oauth/authentication');
-const { generatePasswordRand } = require('../utilities/generatePass');
 const calculation = require('../utilities/calculations');
-const { sendAccountValidator, sendCreatedUserByAdmin } = require('./utils');
+const { sendAccountValidator, sendCreatedUserByAdmin, randomPassword } = require('./utils');
 
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
@@ -26,7 +25,7 @@ const postClient = async (req, res) => {
 
   if (!password && !req.payload) return res.status(403).json({ message: 'Forbidden' });
 
-  const passwordAux = password || generatePasswordRand(8, 'alf');
+  const passwordAux = password || randomPassword(8, 'alf');
   user.password = await user.encryptPassword(passwordAux);
 
   const month = birthdate.split('-')[1] - 1;
@@ -144,9 +143,9 @@ const getClients = async (req, res) => {
 module.exports.getClients = [auth.authentication, getClients];
 
 const followEstablishment = async (req, res) => {
-  const clientId = req.id;
+  const clientId = req.payload.roleId;
 
-  const queryFind = { 'follows.establishmentId': req.body.establishmentId };
+  const queryFind = { 'follows.establishmentId': req.body.establishmentId, _id: clientId };
   try {
     const follow = await Client.findOne(queryFind);
 
@@ -179,16 +178,15 @@ const followEstablishment = async (req, res) => {
   return res.status(200).json({ message: 'Successful operation' });
 };
 module.exports.followEstablishment = [
-  auth.authentication,
-  auth.authorizationClient,
+  authorize([roles.client]),
   validation(establishmentId),
   followEstablishment,
 ];
 
 const interestForEvent = async (req, res) => {
-  const clientId = req.id;
+  const clientId = req.payload.roleId;
 
-  const queryFind = { 'interests.eventId': req.body.eventId };
+  const queryFind = { 'interests.eventId': req.body.eventId, _id: clientId };
   try {
     const interest = await Client.findOne(queryFind);
     if (!interest) {
@@ -232,8 +230,7 @@ const interestForEvent = async (req, res) => {
 };
 
 module.exports.interestForEvent = [
-  auth.authentication,
-  auth.authorizationClient,
+  authorize([roles.client]),
   validation(eventId),
   interestForEvent,
 ];

@@ -45,5 +45,5 @@ calculation.deductInterested = async (eventId) => {
   const interested = foundInterested - 1;
   const data = { $set: { interested } };
   await Event.updateOne({ _id: eventId }, data).orFail();
-}
+};
 module.exports = calculation;
