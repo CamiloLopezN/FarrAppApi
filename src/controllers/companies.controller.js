@@ -53,6 +53,12 @@ const signUp = async (req, res) => {
     if (!foundCompany) {
       await company.save();
       await user.save();
+      if (!req.payload) {
+        sendEmailRegisterCompany(email, companyName);
+      }
+      if (req.payload && !password) {
+        sendCreatedUserByAdmin(email, companyName, passwordAux);
+      }
     }
     sendAccountValidator(
       {
@@ -61,13 +67,6 @@ const signUp = async (req, res) => {
       },
       `${req.protocol}://${req.headers.host}/api/users/verify-account`,
     );
-    if (!req.payload) {
-      sendEmailRegisterCompany(email, companyName);
-    }
-
-    if (req.payload && !password) {
-      sendCreatedUserByAdmin(email, companyName, passwordAux);
-    }
   } catch (err) {
     // eslint-disable-next-line no-underscore-dangle
     await User.deleteOne({ _id: user._id });
