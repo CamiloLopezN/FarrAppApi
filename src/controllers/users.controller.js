@@ -143,7 +143,7 @@ const verifyAccount = async (req, res) => {
 
     return res.status(500).json({ message: `Internal server error` });
   }
-  return res.status(200).json({ message: 'Successful peration' });
+  return res.render('redirection.html');
 };
 module.exports.verifyAccount = [verifyAccount];
 

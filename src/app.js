@@ -14,6 +14,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(authentication);
 
+app.engine('html', require('ejs').renderFile);
+
+app.set('view engine', 'html');
+
 require(`./config/config.database`);
 
 app.use('/api', require('./routes'));
