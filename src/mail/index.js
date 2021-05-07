@@ -243,7 +243,95 @@ function sendRecoverPassword(userMail, tempPassword) {
     `Contraseña temporal: ${tempPassword} ` +
     `Recuerda cambiar la contraseña en tu siguiente inicio de sesión. ` +
     `Equipo de desarrollo de FarrApp`;
-  const html = ``;
+  const html = `<!DOCTYPE html>
+  <html>
+  
+  <head>
+      <link rel="preconnect" href="https://fonts.gstatic.com">
+      <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;1,800&display=swap" rel="stylesheet">
+      <title>Validación</title>
+      <style>
+          #div1 {
+              height: 30vh;
+              width: 1;
+              text-align: center;
+              background-color: rgb(255, 255, 255)
+          }
+  
+          #div2 {
+              height: 32vh;
+              width: 1;
+              background-color: rgb(255, 255, 255);
+              text-align: center;
+          }
+  
+          #div3 {
+              height: 30vh;
+              width: 1;
+              text-align: center;
+              background-color: rgb(255, 255, 255)
+          }
+  
+          @font-face {
+              font-family: "Lovelo Negra";
+              font-style: normal;
+              font-weight: normal;
+              src: Local("?"), url("./resources/LOVELO\ BLACK.OTF")format("truetype");
+          }
+  
+          #title {
+              text-align: center;
+              font-size: 40px;
+              color: rgb(199, 62, 126);
+              font-family: 'Roboto', sans-serif;
+          }
+  
+          #farrapp {
+              padding-top: 10vh;
+              text-align: center;
+              font-size: 120px;
+              font-family: Lovelo Negra;
+              color: rgb(0, 0, 0);
+              font-family: "Lovelo Negra";
+          }
+  
+          #m1 {
+              font-size: 20px;
+              padding-top: 5vh;
+              text-align: center;
+              font-family: 'Open Sans', sans-serif;
+              ;
+          }
+  
+          #m2 {
+              padding-top: 5vh;
+              font-size: 20px;
+              text-align: center;
+              font-family: 'Open Sans', sans-serif;
+              ;
+          }
+      </style>
+  </head>
+  
+  <body>
+  
+      <div id="div1">
+          <h2 id="farrapp">FARRAPP</h2>
+      </div>
+  
+      <div id="div2">
+          <h3 id="m1">Recuperación de contraseña.<br>Hola, solicitaste la recuperación de tu contraseña.<br>Asignamos una
+              contraseña temporal para que puedas acceder a tu cuenta:</h3>
+          <a id="title">Contraseña temporal: ${tempPassword}</a>
+          <h3 id="m1">Recuerda cambiar la contraseña en tu siguiente inicio de sesión.</h3>
+          <h3 id="m2">Equipo de desarrollo de FarrApp</h3>
+      </div>
+  
+  
+      <div id="div3"></div>
+  </body>
+  
+  </html>`;
   sendMail(userMail, subject, text, html);
 }
 
