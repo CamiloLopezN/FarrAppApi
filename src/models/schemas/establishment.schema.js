@@ -31,4 +31,12 @@ establishmentSchema.methods.calculateAvgRating = function calculateAvgRating() {
   this.averageRating = sum / this.reviews.length;
 };
 
+establishmentSchema.methods.sumFollower = function sumFollower() {
+  this.followers += 1;
+};
+
+establishmentSchema.methods.removeFollower = function removeFollower() {
+  this.followers -= 1;
+};
+
 module.exports = establishmentSchema;
