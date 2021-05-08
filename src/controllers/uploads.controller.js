@@ -53,7 +53,9 @@ const validateImageUploaded = (req, res, err) => {
   }
 };
 
+// eslint-disable-next-line consistent-return
 const singleUploadHandler = (req, res, fieldName) => {
+  if (req.file === undefined) return res.status(400).json({ message: 'Bad request' });
   const uploadImage = upload.single(fieldName);
 
   uploadImage(req, res, (err) => {
@@ -64,7 +66,9 @@ const singleUploadHandler = (req, res, fieldName) => {
   });
 };
 
+// eslint-disable-next-line consistent-return
 const multiUploadHandler = (req, res, fieldName, maxCount) => {
+  if (req.files === undefined) return res.status(400).json({ message: 'Bad request' });
   const uploadImage = upload.array(fieldName, maxCount);
 
   uploadImage(req, res, (err) => {
