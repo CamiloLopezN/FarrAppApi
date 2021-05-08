@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 const { Company, Client, Event } = require('../models/entity.model');
-const calculation = require('../utilities/calculations');
+const { authorize } = require('../middlewares/oauth/authentication');
 const validation = require('../middlewares/validations/validation');
 const roles = require('../middlewares/oauth/roles');
-const { authorize } = require('../middlewares/oauth/authentication');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 
 const getEventsLandingPage = async (req, res) => {
@@ -56,14 +55,15 @@ const postReviewEvent = async (req, res) => {
       { $push: { reviews: eventReview } },
       { new: true },
     ).orFail();
-    createdReview = updatedEvent.reviews.pop();
-    await calculation.calculateAvgRatingEvent(eventId);
-    updatedEvent = await Event.findOne({ _id: eventId }).orFail();
+
+    updatedEvent.calculateAvgRating();
+    updatedEvent.save();
+    createdReview = updatedEvent.reviews[updatedEvent.reviews.length - 1];
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data', err });
     return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(201).json({ createdReview, averageRating: updatedEvent.averageRating });

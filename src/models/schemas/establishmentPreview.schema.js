@@ -11,6 +11,7 @@ const establishmentPreviewSchema = new Schema({
   location: { type: locationSchema, required: true },
   imageUrl: { type: String, required: true },
   isActive: { type: Boolean, required: true },
+  followers: { type: Number },
 });
 
 module.exports = establishmentPreviewSchema;
