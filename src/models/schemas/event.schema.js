@@ -33,6 +33,15 @@ eventSchema.methods.calculateAvgRating = function calculateAvgRating() {
   const sum = this.reviews.reduce((accum, review) => accum + Number(review.rating), 0);
   this.averageRating = sum / this.reviews.length;
 };
+
+eventSchema.methods.sumInterested = function sumInterested() {
+  this.interested += 1;
+};
+
+eventSchema.methods.removeInterested = function removeInterested() {
+  this.interested -= 1;
+};
+
 eventSchema.plugin(uniqueValidator);
 
 module.exports = eventSchema;
