@@ -9,7 +9,6 @@ const { establishmentId } = require('../middlewares/validations/establishment.jo
 const { eventId } = require('../middlewares/validations/event.joi');
 const auth = require('../middlewares/oauth/authentication');
 const { authorize } = require('../middlewares/oauth/authentication');
-const calculation = require('../utilities/calculations');
 const { sendAccountValidator, sendCreatedUserByAdmin, randomPassword } = require('./utils');
 
 const postClient = async (req, res) => {
@@ -161,7 +160,7 @@ const followEstablishment = async (req, res) => {
         isActive: establish.isActive,
       };
       await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
-      establish.save();
+      await establish.save();
       currentFollows = establish.followers;
     } else {
       await Client.updateOne(queryFind, {
@@ -173,7 +172,7 @@ const followEstablishment = async (req, res) => {
       );
       if (establishment) {
         establishment.removeFollower();
-        establishment.save();
+        await establishment.save();
         currentFollows = establishment.followers;
       }
     }
@@ -198,16 +197,17 @@ module.exports.followEstablishment = [
 
 const interestForEvent = async (req, res) => {
   const clientId = req.payload.roleId;
-
   const queryFind = { 'interests.eventId': req.body.eventId, _id: clientId };
+  let currentInterest;
   try {
-    const interest = await Client.findOne(queryFind);
-    if (!interest) {
+    const clientInterest = await Client.findOne(queryFind);
+    if (!clientInterest) {
       const event = await Event.findOne({ _id: req.body.eventId }).orFail();
       const est = await Establishment.findOne({
         _id: event.establishment.establishmentId,
       }).orFail();
 
+      event.sumInterested();
       const eventPreview = {
         // eslint-disable-next-line no-underscore-dangle
         eventId: event._id,
@@ -225,21 +225,40 @@ const interestForEvent = async (req, res) => {
         dressCodes: event.dressCodes,
       };
       await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
-      await calculation.sumInterested(req.body.eventId);
+      event.save();
+      currentInterest = event.interested;
     } else {
       await Client.updateOne(queryFind, {
         $pull: { interests: { eventId: req.body.eventId } },
       }).orFail();
-      const event = await Event.findOne({ _id: req.body.eventId }, { _id: 0 });
+
+      const event = await Event.findOne({ _id: req.body.eventId }, { interested: 1 });
+
       if (event) {
-        await calculation.deductInterested(req.body.eventId);
+        event.removeInterested();
+        await event.save();
+        currentInterest = event.interested;
       }
     }
+
+    await Company.updateOne(
+      { 'events.eventId': req.body.eventId },
+      {
+        $set: { 'events.$.interested': currentInterest },
+      },
+    );
+
+    await Establishment.updateOne(
+      { 'events.eventId': req.body.eventId },
+      {
+        $set: { 'events.$.interested': currentInterest },
+      },
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data', err });
     return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: 'Successful operation' });
