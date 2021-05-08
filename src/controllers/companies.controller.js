@@ -489,8 +489,7 @@ const getEventById = async (req, res) => {
           { 'events.eventId': { $in: [eventId] } },
         ],
       });
-      if (!establishment)
-        return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      if (!establishment) return res.status(404).json({ message: 'Resource Not Found' });
       event = await Event.findOne({ _id: eventId }).orFail();
     } else {
       event = await Event.findOne({ _id: eventId }, { 'tickets.promotionalCodes': 0 }).orFail();
