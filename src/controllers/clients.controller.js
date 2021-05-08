@@ -1,6 +1,6 @@
 const mongoose = require('../config/config.database');
 
-const { Client, User, Establishment, Event } = require('../models/entity.model');
+const { Client, User, Establishment, Event, Company } = require('../models/entity.model');
 const { validatePass } = require('./password.controller');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
@@ -144,13 +144,13 @@ module.exports.getClients = [auth.authentication, getClients];
 
 const followEstablishment = async (req, res) => {
   const clientId = req.payload.roleId;
-
   const queryFind = { 'follows.establishmentId': req.body.establishmentId, _id: clientId };
+  let currentFollows;
   try {
-    const follow = await Client.findOne(queryFind);
-
-    if (!follow) {
+    const clientFollow = await Client.findOne(queryFind);
+    if (!clientFollow) {
       const establish = await Establishment.findOne({ _id: req.body.establishmentId }).orFail();
+      establish.sumFollower();
       const estPreview = {
         // eslint-disable-next-line no-underscore-dangle
         establishmentId: establish._id,
@@ -161,24 +161,31 @@ const followEstablishment = async (req, res) => {
         isActive: establish.isActive,
       };
       await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
-      await calculation.sumFollower(req.body.establishmentId);
+      establish.save();
+      currentFollows = establish.followers;
     } else {
       await Client.updateOne(queryFind, {
         $pull: { follows: { establishmentId: req.body.establishmentId } },
       }).orFail();
       const establishment = await Establishment.findOne(
         { _id: req.body.establishmentId },
-        { _id: 1 },
+        { followers: 1 },
       );
       if (establishment) {
-        await calculation.deductFollower(req.body.establishmentId);
+        establishment.removeFollower();
+        establishment.save();
+        currentFollows = establishment.followers;
       }
     }
+    await Company.updateOne(
+      { 'establishments.establishmentId': req.body.establishmentId },
+      { $set: { 'establishments.$.followers': currentFollows } },
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data', err });
     return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: 'Successful operation' });
