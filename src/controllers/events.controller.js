@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const { Company, Client, Event } = require('../models/entity.model');
 const calculation = require('../utilities/calculations');
-const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
 const validation = require('../middlewares/validations/validation');
+const roles = require('../middlewares/oauth/roles');
+const { authorize } = require('../middlewares/oauth/authentication');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 
 const getEventsLandingPage = async (req, res) => {
@@ -36,7 +37,7 @@ const getEventsLandingPage = async (req, res) => {
 module.exports.getEventsLandingPage = [getEventsLandingPage];
 
 const postReviewEvent = async (req, res) => {
-  const clientId = req.id;
+  const clientId = req.payload.roleId;
   const { eventId } = req.params;
   let eventReview;
   let createdReview;
@@ -69,8 +70,7 @@ const postReviewEvent = async (req, res) => {
 };
 
 module.exports.postReviewEvent = [
-  authentication,
-  authorizationClient,
+  authorize([roles.client]),
   validation(establishmentReview),
   postReviewEvent,
 ];

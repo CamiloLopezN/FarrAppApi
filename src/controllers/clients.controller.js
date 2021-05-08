@@ -7,7 +7,6 @@ const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
 const { establishmentId } = require('../middlewares/validations/establishment.joi');
 const { eventId } = require('../middlewares/validations/event.joi');
-const auth = require('../middlewares/oauth/authentication');
 const { authorize } = require('../middlewares/oauth/authentication');
 const calculation = require('../utilities/calculations');
 const { sendAccountValidator, sendCreatedUserByAdmin, randomPassword } = require('./utils');
@@ -80,16 +79,17 @@ module.exports.postClient = [
 
 const updateClientProfile = async (req, res) => {
   const { clientId } = req.params;
+  const { roleId, role } = req.payload;
   const { birthdate, firstName, lastName, gender } = req.body;
-  if (req.id !== clientId)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (role !== roles.admin && roleId !== clientId)
+    return res.status(403).json({ message: 'Forbidden' });
   const month = birthdate.split('-')[1] - 1;
   const myDate = new Date(birthdate.split('-')[0], month, birthdate.split('-')[2]);
   const data = {
     $set: { birthdate: myDate, firstName, lastName, gender },
   };
   try {
-    const update = await Client.findOneAndUpdate({ _id: req.id }, data);
+    const update = await Client.findOneAndUpdate({ _id: roleId }, data);
     if (!update) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
@@ -99,17 +99,18 @@ const updateClientProfile = async (req, res) => {
   return res.status(200).json({ message: 'Successful update' });
 };
 module.exports.updateClientProfile = [
-  auth.authentication,
-  auth.authorizationClient,
+  authorize([roles.admin, roles.client]),
   validation(updateClientVal),
   updateClientProfile,
 ];
 
 const getClientById = async (req, res) => {
   const { clientId } = req.params;
-  const id = auth.authorizationAdminOrClient(req, res, clientId);
+  const { roleId, role } = req.payload;
+  if (role !== roles.admin && roleId !== clientId)
+    return res.status(403).json({ message: 'Forbidden' });
   try {
-    const doc = await Client.findOne({ _id: id }, { __v: 0 });
+    const doc = await Client.findOne({ _id: clientId }, { __v: 0 });
     if (!doc) return res.status(404).json({ message: 'Resource not found' });
     return res.status(200).json({ message: doc });
   } catch (err) {
@@ -118,12 +119,11 @@ const getClientById = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
-module.exports.getClientById = [auth.authentication, getClientById];
+module.exports.getClientById = [authorize([roles.client, roles.admin]), getClientById];
 
 const getClients = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
   const page = parseInt(req.query.page, 10) || 1;
-  if (!req.payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
   const projection = {
     createdAt: 0,
     updatedAt: 0,
@@ -140,7 +140,7 @@ const getClients = async (req, res) => {
   }
   return res.status(200).json({ message: clients });
 };
-module.exports.getClients = [auth.authentication, getClients];
+module.exports.getClients = [authorize([roles.admin]), getClients];
 
 const followEstablishment = async (req, res) => {
   const clientId = req.payload.roleId;

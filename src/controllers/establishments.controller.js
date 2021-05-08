@@ -4,10 +4,11 @@ const { Establishment, Client, Company } = require('../models/entity.model');
 const validation = require('../middlewares/validations/validation');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 const calculation = require('../utilities/calculations');
-const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
+const roles = require('../middlewares/oauth/roles');
+const { authorize } = require('../middlewares/oauth/authentication');
 
 const postReviewEstablishment = async (req, res) => {
-  const clientId = req.id;
+  const clientId = req.payload.roleId;
   const { establishmentId } = req.params;
   let estReview;
   let createdReview;
@@ -39,8 +40,7 @@ const postReviewEstablishment = async (req, res) => {
   return res.status(201).json({ createdReview, averageRating: updatedEstab.averageRating });
 };
 module.exports.postReviewEstablishment = [
-  authentication,
-  authorizationClient,
+  authorize([roles.client]),
   validation(establishmentReview),
   postReviewEstablishment,
 ];
@@ -71,5 +71,4 @@ const getEstablishmentLandingPage = async (req, res) => {
 
   return res.status(200).json(establishments);
 };
-
 module.exports.getEstablishmentLandingPage = [getEstablishmentLandingPage];
