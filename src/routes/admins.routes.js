@@ -8,7 +8,7 @@ router.get('/clients', adminsController.getClientAccounts);
 router.get('/companies/:companyId', adminsController.getCompanyById);
 router.get('/companies', adminsController.getCompanyAccounts);
 router.get('/:adminId', adminsController.getAdminById);
-router.post('/:adminId/update', adminsController.updateProfileAdmin);
+router.post('/:adminId', adminsController.updateProfileAdmin);
 router.post('/', adminsController.postAdmin);
 
 module.exports = router;

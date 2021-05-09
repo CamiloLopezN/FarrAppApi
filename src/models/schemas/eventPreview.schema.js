@@ -14,6 +14,7 @@ const eventPreviewSchema = new Schema({
   categories: { type: [String], required: true },
   dressCodes: { type: [String], required: true },
   status: { type: String, required: true },
+  interested: { type: Number },
 });
 
 module.exports = eventPreviewSchema;

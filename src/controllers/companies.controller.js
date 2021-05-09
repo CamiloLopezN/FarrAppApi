@@ -53,6 +53,12 @@ const signUp = async (req, res) => {
     if (!foundCompany) {
       await company.save();
       await user.save();
+      if (!req.payload) {
+        sendEmailRegisterCompany(email, companyName);
+      }
+      if (req.payload && !password) {
+        sendCreatedUserByAdmin(email, companyName, passwordAux);
+      }
     }
     sendAccountValidator(
       {
@@ -61,13 +67,6 @@ const signUp = async (req, res) => {
       },
       `${req.protocol}://${req.headers.host}/api/users/verify-account`,
     );
-    if (!req.payload) {
-      sendEmailRegisterCompany(email, companyName);
-    }
-
-    if (req.payload && !password) {
-      sendCreatedUserByAdmin(email, companyName, passwordAux);
-    }
   } catch (err) {
     // eslint-disable-next-line no-underscore-dangle
     await User.deleteOne({ _id: user._id });
@@ -490,8 +489,7 @@ const getEventById = async (req, res) => {
           { 'events.eventId': { $in: [eventId] } },
         ],
       });
-      if (!establishment)
-        return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      if (!establishment) return res.status(404).json({ message: 'Resource Not Found' });
       event = await Event.findOne({ _id: eventId }).orFail();
     } else {
       event = await Event.findOne({ _id: eventId }, { 'tickets.promotionalCodes': 0 }).orFail();

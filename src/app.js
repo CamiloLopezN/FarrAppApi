@@ -14,6 +14,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(authentication);
 
+app.engine('html', require('ejs').renderFile);
+
+app.set('view engine', 'html');
+
 require(`./config/config.database`);
 
 app.use('/api', require('./routes'));
@@ -24,5 +28,6 @@ app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/clients', require('./routes/clients.routes'));
 app.use('/api/events', require('./routes/events.routes'));
 app.use('/api/establishments', require('./routes/establishments.routes'));
+app.use('/api/uploads', require('./routes/uploads.routes'));
 
 module.exports = app;

@@ -26,4 +26,17 @@ const establishmentSchema = new Schema({
   followers: { type: Number },
 });
 
+establishmentSchema.methods.calculateAvgRating = function calculateAvgRating() {
+  const sum = this.reviews.reduce((accum, review) => accum + Number(review.rating), 0);
+  this.averageRating = sum / this.reviews.length;
+};
+
+establishmentSchema.methods.sumFollower = function sumFollower() {
+  this.followers += 1;
+};
+
+establishmentSchema.methods.removeFollower = function removeFollower() {
+  this.followers -= 1;
+};
+
 module.exports = establishmentSchema;
