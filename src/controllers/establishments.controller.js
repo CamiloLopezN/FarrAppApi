@@ -3,11 +3,11 @@ const mongoose = require('../config/config.database');
 const { Establishment, Client, Company } = require('../models/entity.model');
 const validation = require('../middlewares/validations/validation');
 const { establishmentReview } = require('../middlewares/validations/establishment.joi');
-const calculation = require('../utilities/calculations');
-const { authentication, authorizationClient } = require('../middlewares/oauth/authentication');
+const roles = require('../middlewares/oauth/roles');
+const { authorize } = require('../middlewares/oauth/authentication');
 
 const postReviewEstablishment = async (req, res) => {
-  const clientId = req.id;
+  const clientId = req.payload.roleId;
   const { establishmentId } = req.params;
   let estReview;
   let createdReview;
@@ -26,21 +26,20 @@ const postReviewEstablishment = async (req, res) => {
       { $push: { reviews: estReview } },
       { new: true },
     ).orFail();
-    createdReview = updatedEstab.reviews.pop();
-    await calculation.calculateAvgRatingEstablishment(establishmentId);
-    updatedEstab = await Establishment.findOne({ _id: establishmentId }).orFail();
+    updatedEstab.calculateAvgRating();
+    updatedEstab.save();
+    createdReview = updatedEstab.reviews[updatedEstab.reviews.length - 1];
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data', err });
     return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(201).json({ createdReview, averageRating: updatedEstab.averageRating });
 };
 module.exports.postReviewEstablishment = [
-  authentication,
-  authorizationClient,
+  authorize([roles.client]),
   validation(establishmentReview),
   postReviewEstablishment,
 ];
@@ -71,5 +70,4 @@ const getEstablishmentLandingPage = async (req, res) => {
 
   return res.status(200).json(establishments);
 };
-
 module.exports.getEstablishmentLandingPage = [getEstablishmentLandingPage];

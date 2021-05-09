@@ -1,15 +1,13 @@
 const mongoose = require('../config/config.database');
 
-const { Client, User, Establishment, Event } = require('../models/entity.model');
+const { Client, User, Establishment, Event, Company } = require('../models/entity.model');
 const { validatePass } = require('./password.controller');
 const roles = require('../middlewares/oauth/roles');
 const validation = require('../middlewares/validations/validation');
 const { postClientVal, updateClientVal } = require('../middlewares/validations/client.joi');
 const { establishmentId } = require('../middlewares/validations/establishment.joi');
 const { eventId } = require('../middlewares/validations/event.joi');
-const auth = require('../middlewares/oauth/authentication');
 const { authorize } = require('../middlewares/oauth/authentication');
-const calculation = require('../utilities/calculations');
 const { sendAccountValidator, sendCreatedUserByAdmin, randomPassword } = require('./utils');
 
 const postClient = async (req, res) => {
@@ -80,16 +78,17 @@ module.exports.postClient = [
 
 const updateClientProfile = async (req, res) => {
   const { clientId } = req.params;
+  const { roleId, role } = req.payload;
   const { birthdate, firstName, lastName, gender } = req.body;
-  if (req.id !== clientId)
-    return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+  if (role !== roles.admin && roleId !== clientId)
+    return res.status(403).json({ message: 'Forbidden' });
   const month = birthdate.split('-')[1] - 1;
   const myDate = new Date(birthdate.split('-')[0], month, birthdate.split('-')[2]);
   const data = {
     $set: { birthdate: myDate, firstName, lastName, gender },
   };
   try {
-    const update = await Client.findOneAndUpdate({ _id: req.id }, data);
+    const update = await Client.findOneAndUpdate({ _id: clientId }, data);
     if (!update) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
@@ -99,17 +98,18 @@ const updateClientProfile = async (req, res) => {
   return res.status(200).json({ message: 'Successful update' });
 };
 module.exports.updateClientProfile = [
-  auth.authentication,
-  auth.authorizationClient,
+  authorize([roles.admin, roles.client]),
   validation(updateClientVal),
   updateClientProfile,
 ];
 
 const getClientById = async (req, res) => {
   const { clientId } = req.params;
-  const id = auth.authorizationAdminOrClient(req, res, clientId);
+  const { roleId, role } = req.payload;
+  if (role !== roles.admin && roleId !== clientId)
+    return res.status(403).json({ message: 'Forbidden' });
   try {
-    const doc = await Client.findOne({ _id: id }, { __v: 0 });
+    const doc = await Client.findOne({ _id: clientId }, { __v: 0 });
     if (!doc) return res.status(404).json({ message: 'Resource not found' });
     return res.status(200).json({ message: doc });
   } catch (err) {
@@ -118,12 +118,11 @@ const getClientById = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
-module.exports.getClientById = [auth.authentication, getClientById];
+module.exports.getClientById = [authorize([roles.client, roles.admin]), getClientById];
 
 const getClients = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
   const page = parseInt(req.query.page, 10) || 1;
-  if (!req.payload.role === roles.admin) return res.status(403).json({ message: 'Forbidden' });
   const projection = {
     createdAt: 0,
     updatedAt: 0,
@@ -140,17 +139,17 @@ const getClients = async (req, res) => {
   }
   return res.status(200).json({ message: clients });
 };
-module.exports.getClients = [auth.authentication, getClients];
+module.exports.getClients = [authorize([roles.admin]), getClients];
 
 const followEstablishment = async (req, res) => {
   const clientId = req.payload.roleId;
-
   const queryFind = { 'follows.establishmentId': req.body.establishmentId, _id: clientId };
+  let currentFollows;
   try {
-    const follow = await Client.findOne(queryFind);
-
-    if (!follow) {
+    const clientFollow = await Client.findOne(queryFind);
+    if (!clientFollow) {
       const establish = await Establishment.findOne({ _id: req.body.establishmentId }).orFail();
+      establish.sumFollower();
       const estPreview = {
         // eslint-disable-next-line no-underscore-dangle
         establishmentId: establish._id,
@@ -161,24 +160,31 @@ const followEstablishment = async (req, res) => {
         isActive: establish.isActive,
       };
       await Client.updateOne({ _id: clientId }, { $push: { follows: estPreview } }).orFail();
-      await calculation.sumFollower(req.body.establishmentId);
+      await establish.save();
+      currentFollows = establish.followers;
     } else {
       await Client.updateOne(queryFind, {
         $pull: { follows: { establishmentId: req.body.establishmentId } },
       }).orFail();
       const establishment = await Establishment.findOne(
         { _id: req.body.establishmentId },
-        { _id: 1 },
+        { followers: 1 },
       );
       if (establishment) {
-        await calculation.deductFollower(req.body.establishmentId);
+        establishment.removeFollower();
+        await establishment.save();
+        currentFollows = establishment.followers;
       }
     }
+    await Company.updateOne(
+      { 'establishments.establishmentId': req.body.establishmentId },
+      { $set: { 'establishments.$.followers': currentFollows } },
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data', err });
     return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: 'Successful operation' });
@@ -191,16 +197,17 @@ module.exports.followEstablishment = [
 
 const interestForEvent = async (req, res) => {
   const clientId = req.payload.roleId;
-
   const queryFind = { 'interests.eventId': req.body.eventId, _id: clientId };
+  let currentInterest;
   try {
-    const interest = await Client.findOne(queryFind);
-    if (!interest) {
+    const clientInterest = await Client.findOne(queryFind);
+    if (!clientInterest) {
       const event = await Event.findOne({ _id: req.body.eventId }).orFail();
       const est = await Establishment.findOne({
         _id: event.establishment.establishmentId,
       }).orFail();
 
+      event.sumInterested();
       const eventPreview = {
         // eslint-disable-next-line no-underscore-dangle
         eventId: event._id,
@@ -218,21 +225,40 @@ const interestForEvent = async (req, res) => {
         dressCodes: event.dressCodes,
       };
       await Client.updateOne({ _id: clientId }, { $push: { interests: eventPreview } }).orFail();
-      await calculation.sumInterested(req.body.eventId);
+      event.save();
+      currentInterest = event.interested;
     } else {
       await Client.updateOne(queryFind, {
         $pull: { interests: { eventId: req.body.eventId } },
       }).orFail();
-      const event = await Event.findOne({ _id: req.body.eventId }, { _id: 0 });
+
+      const event = await Event.findOne({ _id: req.body.eventId }, { interested: 1 });
+
       if (event) {
-        await calculation.deductInterested(req.body.eventId);
+        event.removeInterested();
+        await event.save();
+        currentInterest = event.interested;
       }
     }
+
+    await Company.updateOne(
+      { 'events.eventId': req.body.eventId },
+      {
+        $set: { 'events.$.interested': currentInterest },
+      },
+    );
+
+    await Establishment.updateOne(
+      { 'events.eventId': req.body.eventId },
+      {
+        $set: { 'events.$.interested': currentInterest },
+      },
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.DocumentNotFoundError)
       return res.status(404).json({ message: 'Not found resource' });
     if (err instanceof mongoose.Error.ValidationError)
-      return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      return res.status(400).json({ message: 'Incomplete or bad formatted client data', err });
     return res.status(500).json({ message: 'Internal server error' });
   }
   return res.status(200).json({ message: 'Successful operation' });

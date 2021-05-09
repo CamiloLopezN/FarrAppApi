@@ -53,6 +53,12 @@ const signUp = async (req, res) => {
     if (!foundCompany) {
       await company.save();
       await user.save();
+      if (!req.payload) {
+        sendEmailRegisterCompany(email, companyName);
+      }
+      if (req.payload && !password) {
+        sendCreatedUserByAdmin(email, companyName, passwordAux);
+      }
     }
     sendAccountValidator(
       {
@@ -61,13 +67,6 @@ const signUp = async (req, res) => {
       },
       `${req.protocol}://${req.headers.host}/api/users/verify-account`,
     );
-    if (!req.payload) {
-      sendEmailRegisterCompany(email, companyName);
-    }
-
-    if (req.payload && !password) {
-      sendCreatedUserByAdmin(email, companyName, passwordAux);
-    }
   } catch (err) {
     // eslint-disable-next-line no-underscore-dangle
     await User.deleteOne({ _id: user._id });
@@ -287,11 +286,13 @@ const updateEstablishmentById = async (req, res) => {
     const establishmentPreview = {
       // eslint-disable-next-line no-underscore-dangle
       establishmentId: establishmentUpdated._id,
+      companyId,
       establishmentName: establishmentUpdated.establishmentName,
       location: establishmentUpdated.location,
       address: establishmentUpdated.location.address,
       imageUrl: establishmentUpdated.photoUrls[0],
       isActive: establishmentUpdated.isActive,
+      followers: establishmentUpdated.followers,
     };
 
     await Company.updateOne(
@@ -303,7 +304,7 @@ const updateEstablishmentById = async (req, res) => {
     await Client.updateMany(
       { 'follows.establishmentId': establishmentPreview.establishmentId },
       { $set: { 'follows.$': establishmentPreview } },
-    ).orFail();
+    );
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
       return res
@@ -490,8 +491,7 @@ const getEventById = async (req, res) => {
           { 'events.eventId': { $in: [eventId] } },
         ],
       });
-      if (!establishment)
-        return res.status(400).json({ message: 'Incomplete or bad formatted client data' });
+      if (!establishment) return res.status(404).json({ message: 'Resource Not Found' });
       event = await Event.findOne({ _id: eventId }).orFail();
     } else {
       event = await Event.findOne({ _id: eventId }, { 'tickets.promotionalCodes': 0 }).orFail();
