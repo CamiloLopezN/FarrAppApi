@@ -55,10 +55,10 @@ const validateImageUploaded = (req, res, err) => {
 
 // eslint-disable-next-line consistent-return
 const singleUploadHandler = (req, res, fieldName) => {
-  if (req.file === undefined) return res.status(400).json({ message: 'Bad request' });
   const uploadImage = upload.single(fieldName);
 
   uploadImage(req, res, (err) => {
+    if (req.file === undefined) return res.status(400).json({ message: 'Bad request' });
     if (err) return validateImageUploaded(req, res, err);
     const resImage = {};
     resImage[`${req.file.fieldname}`] = `${CDN_URL}/${req.file.key}`;
@@ -68,10 +68,10 @@ const singleUploadHandler = (req, res, fieldName) => {
 
 // eslint-disable-next-line consistent-return
 const multiUploadHandler = (req, res, fieldName, maxCount) => {
-  if (req.files === undefined) return res.status(400).json({ message: 'Bad request' });
   const uploadImage = upload.array(fieldName, maxCount);
 
   uploadImage(req, res, (err) => {
+    if (req.files === undefined) return res.status(400).json({ message: 'Bad request' });
     if (err) return validateImageUploaded(req, res, err);
     return res.status(200).json(
       req.files.map((photo) => {
