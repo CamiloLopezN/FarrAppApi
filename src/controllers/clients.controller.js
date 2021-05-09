@@ -88,7 +88,7 @@ const updateClientProfile = async (req, res) => {
     $set: { birthdate: myDate, firstName, lastName, gender },
   };
   try {
-    const update = await Client.findOneAndUpdate({ _id: roleId }, data);
+    const update = await Client.findOneAndUpdate({ _id: clientId }, data);
     if (!update) return res.status(404).json({ message: 'Resource not found' });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError)
