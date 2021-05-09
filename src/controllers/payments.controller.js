@@ -273,6 +273,8 @@ const postPaidMembership = async (req, res) => {
       paymentMethod: payments.franchises[paymentDetail.paymentMethod],
       price: paymentDetail.amount,
       tax: paymentDetail.tax,
+      intervalCount,
+      interval,
     };
     await Company.findOneAndUpdate(
       { _id: companyId },

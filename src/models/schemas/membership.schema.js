@@ -11,6 +11,8 @@ const membershipSchema = new Schema({
   paymentMethod: { type: String, required: true },
   price: { type: Number, required: true },
   tax: { type: Number, required: true },
+  interval: { type: String, required: true },
+  intervalCount: { type: Number, required: true },
 });
 
 module.exports = membershipSchema;
