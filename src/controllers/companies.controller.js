@@ -286,11 +286,13 @@ const updateEstablishmentById = async (req, res) => {
     const establishmentPreview = {
       // eslint-disable-next-line no-underscore-dangle
       establishmentId: establishmentUpdated._id,
+      companyId,
       establishmentName: establishmentUpdated.establishmentName,
       location: establishmentUpdated.location,
       address: establishmentUpdated.location.address,
       imageUrl: establishmentUpdated.photoUrls[0],
       isActive: establishmentUpdated.isActive,
+      followers: establishmentUpdated.followers,
     };
 
     await Company.updateOne(
