@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const { Company, Client, Event } = require('../models/entity.model');
 const { authorize } = require('../middlewares/oauth/authentication');
 const validation = require('../middlewares/validations/validation');
-const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 const roles = require('../middlewares/oauth/roles');
+const { establishmentReview } = require('../middlewares/validations/establishment.joi');
 
 const getEventsLandingPage = async (req, res) => {
   let events;

@@ -70,5 +70,4 @@ const getEstablishmentLandingPage = async (req, res) => {
 
   return res.status(200).json(establishments);
 };
-
 module.exports.getEstablishmentLandingPage = [getEstablishmentLandingPage];
