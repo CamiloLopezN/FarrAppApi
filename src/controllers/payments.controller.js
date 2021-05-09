@@ -236,7 +236,8 @@ const getLastMembership = async (req, res) => {
   let membership;
   try {
     const company = await Company.findOne({ _id: req.params.companyId }).orFail();
-    membership = company.currentMembership || {};
+    membership = company.currentMembership;
+    if (!membership) res.status(404).json({ message: 'Membership not found' });
   } catch (error) {
     if (
       error instanceof mongoose.Error.CastError ||
