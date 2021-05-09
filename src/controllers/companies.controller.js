@@ -563,6 +563,7 @@ const updateEvent = async (req, res) => {
         minAge: 1,
         categories: 1,
         dressCodes: 1,
+        interested: 1,
       },
     ).orFail();
     const eventPreview = {
@@ -580,6 +581,7 @@ const updateEvent = async (req, res) => {
       categories: eventUpdated.categories,
       dressCodes: eventUpdated.dressCodes,
       status: eventUpdated.status,
+      interested: eventUpdated.interested,
     };
     await Establishment.updateOne(
       { _id: establishmentId, 'events.eventId': eventPreview.eventId },
