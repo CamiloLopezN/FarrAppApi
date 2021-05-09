@@ -1,6 +1,7 @@
 const { Schema } = require('../../config/config.database');
 const eventPreviewSchema = require('./eventPreview.schema');
 const establishmentPreviewSchema = require('./establishmentPreview.schema');
+const membershipSchema = require('./membership.schema');
 
 const companySchema = new Schema(
   {
@@ -12,6 +13,8 @@ const companySchema = new Schema(
     establishments: [establishmentPreviewSchema],
     events: [eventPreviewSchema],
     customerId: { type: String },
+    currentMembership: membershipSchema,
+    memberships: [membershipSchema],
   },
   {
     timestamps: true,

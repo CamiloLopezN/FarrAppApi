@@ -1,9 +1,53 @@
+const axios = require('axios');
 const epayco = require('epayco-sdk-node')({
   apiKey: process.env.EPAYCO_PUBLIC_KEY,
   privateKey: process.env.EPAYCO_PRIVATE_KEY,
   lang: 'ES',
   test: true,
 });
+
+const URL_APIFY = 'https://apify.epayco.co';
+const franchises = {
+  AM: 'Amex',
+  BA: 'Baloto',
+  CR: 'Credencial',
+  DC: 'Diners Club',
+  EF: 'Efecty',
+  GA: 'Gana',
+  PR: 'Punto Red',
+  RS: 'Red Servi',
+  MC: 'Mastercard',
+  PSE: 'PSE',
+  SP: 'SafetyPay',
+  VS: 'Visa',
+};
+module.exports.franchises = franchises;
+
+const loginApify = async () => {
+  const auth = `Basic ${Buffer.from(
+    `${process.env.EPAYCO_PUBLIC_KEY}:${process.env.EPAYCO_PRIVATE_KEY}`,
+  ).toString('base64')}`;
+  const request = await axios.post(`${URL_APIFY}/login`, {}, { headers: { Authorization: auth } });
+  return request.data.token;
+};
+
+module.exports.transactionDetails = async (referencePayco) => {
+  const token = await loginApify();
+  const transactionDetails = await axios({
+    method: 'get',
+    url: `${URL_APIFY}/transaction/detail`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    data: JSON.stringify({
+      filter: {
+        referencePayco,
+      },
+    }),
+  });
+  return transactionDetails.data.data;
+};
 
 module.exports.createToken = (cardNumber, cardExpYear, cardExpMonth, cardCVC) =>
   epayco.token.create({
@@ -41,6 +85,8 @@ module.exports.createCustomer = (
 module.exports.listCustomers = () => epayco.customers.list();
 
 module.exports.listPlans = () => epayco.plans.list();
+
+module.exports.getPlan = (planId) => epayco.plans.get(planId);
 
 module.exports.getCustomerById = (customerId) => epayco.customers.get(customerId);
 

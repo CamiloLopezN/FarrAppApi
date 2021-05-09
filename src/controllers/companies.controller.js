@@ -1,3 +1,4 @@
+const moment = require('moment');
 const mongoose = require('../config/config.database');
 
 const { Company, Establishment, User, Event, Client } = require('../models/entity.model');
@@ -533,6 +534,14 @@ const updateEvent = async (req, res) => {
     const { body } = req;
     if (body.status) {
       body.status = body.status[0].toUpperCase() + body.status.slice(1);
+    }
+    if (body.status === 'Activo') {
+      const membershipCompany = await Company.findOne({ _id: companyId }).orFail();
+      if (
+        !membershipCompany.currentMembership ||
+        moment(membershipCompany.currentMembership.periodEnd).isBefore(moment())
+      )
+        return res.status(400).json({ message: 'Company does not have an active membership' });
     }
     const data = {
       $set: body,
