@@ -290,4 +290,4 @@ const postPaidMembership = async (req, res) => {
   }
   return res.status(200).json({ message: 'Successful operation', membership });
 };
-module.exports.postPaidMembership = [authorize(roles.company), postPaidMembership];
+module.exports.postPaidMembership = [authorize([roles.company]), postPaidMembership];
