@@ -33,6 +33,10 @@ const loginApify = async () => {
 
 module.exports.transactionDetails = async (referencePayco) => {
   const token = await loginApify();
+  const referenceDetails = await axios({
+    method: 'get',
+    url: `https://secure.epayco.co/validation/v1/reference/${referencePayco}`,
+  });
   const transactionDetails = await axios({
     method: 'get',
     url: `${URL_APIFY}/transaction/detail`,
@@ -42,7 +46,7 @@ module.exports.transactionDetails = async (referencePayco) => {
     },
     data: JSON.stringify({
       filter: {
-        referencePayco,
+        referencePayco: referenceDetails.data.data.x_ref_payco,
       },
     }),
   });
