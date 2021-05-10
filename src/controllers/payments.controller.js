@@ -199,10 +199,10 @@ const removeCustomerCard = async (req, res) => {
 module.exports.removeCustomerCard = [authorize([roles.admin, roles.company]), removeCustomerCard];
 
 const getMemberships = async (req, res) => {
-  const { customerId } = req.params;
+  const { companyId } = req.params;
   let company;
   try {
-    company = await Company.findOne({ customerId }).orFail();
+    company = await Company.findOne({ _id: companyId }).orFail();
   } catch (e) {
     if (e instanceof mongoose.Error.DocumentNotFoundError || e instanceof mongoose.Error.CastError)
       return res.status(404).json({ message: 'Resource not found' });
@@ -215,11 +215,11 @@ const getMemberships = async (req, res) => {
 module.exports.getMemberships = [authorize([roles.admin, roles.company]), getMemberships];
 
 const getMembershipById = async (req, res) => {
-  const { customerId, membershipId } = req.params;
+  const { companyId, membershipId } = req.params;
   let company;
   let membership;
   try {
-    company = await Company.findOne({ customerId }).orFail();
+    company = await Company.findOne({ _id: companyId }).orFail();
     membership = company.memberships.id(membershipId);
   } catch (e) {
     if (e instanceof mongoose.Error.DocumentNotFoundError || e instanceof mongoose.Error.CastError)
