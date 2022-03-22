@@ -47,6 +47,8 @@ const validateImageUploaded = (req, res, err) => {
     });
   }
   if (err) {
+    console.log(err)
+
     return res.status(400).send({
       errors: [{ title: 'Unexpected error', detail: err.message }],
     });
@@ -61,11 +63,11 @@ const singleUploadHandler = (req, res, fieldName) => {
     if (req.file === undefined) return res.status(400).json({ message: 'Bad request' });
     if (err) return validateImageUploaded(req, res, err);
     const resImage = {};
-    resImage[`${req.file.fieldname}`] = `${CDN_URL}/${req.file.key}`;
+    resImage[`${req.file.fieldname}`] = `${""}/${req.file.key}`;
     return res.status(200).json(resImage);
   });
 };
-
+//En las comillas va el CDN NAME
 // eslint-disable-next-line consistent-return
 const multiUploadHandler = (req, res, fieldName, maxCount) => {
   const uploadImage = upload.array(fieldName, maxCount);
@@ -76,7 +78,7 @@ const multiUploadHandler = (req, res, fieldName, maxCount) => {
     return res.status(200).json(
       req.files.map((photo) => {
         const resImage = {};
-        resImage[`${photo.fieldname}`] = `${CDN_URL}/${photo.key}`;
+        resImage[`${photo.fieldname}`] = `${""}/${photo.key}`;
         return resImage;
       }),
     );

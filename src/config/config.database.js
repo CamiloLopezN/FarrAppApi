@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const debug = require('debug')('farrapp-api:mongodb');
 
@@ -18,7 +19,6 @@ const mongoOptions = {
 // CONNECT TO DATABASE
 mongoose
   .connect(MONGO_URL, mongoOptions)
-  .then(() => debug('Connected to Database!'))
-  .catch((err) => debug(err));
-
+  .then(() => console.log('Connected to Database!'))
+  .catch((err) => console.log(err));
 module.exports = mongoose;
