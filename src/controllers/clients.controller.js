@@ -10,6 +10,7 @@ const { eventId } = require('../middlewares/validations/event.joi');
 const { authorize } = require('../middlewares/oauth/authentication');
 const { sendAccountValidator, sendCreatedUserByAdmin, randomPassword } = require('./utils');
 
+
 const postClient = async (req, res) => {
   const { email, password, firstName, lastName, birthdate, gender } = req.body;
   const user = new User({

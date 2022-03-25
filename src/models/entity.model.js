@@ -4,6 +4,8 @@ const Client = model('Client', require('./schemas/client.schema'));
 const Admin = model('Admin', require('./schemas/admin.schema'));
 const Company = model('Company', require('./schemas/company.schema'));
 const User = model('User', require('./schemas/user.schema'));
+const UserFacebook = model('UserFacebook', require('./schemas/userFacebook.schema'));
+
 const Role = model('Role', require('./schemas/role.schema'));
 const Establishment = model(
   'Establishment',
@@ -39,6 +41,7 @@ module.exports = {
   Admin,
   Company,
   User,
+  UserFacebook,
   Role,
   Establishment,
   EstablishmentCategory,

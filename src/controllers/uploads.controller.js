@@ -63,7 +63,7 @@ const singleUploadHandler = (req, res, fieldName) => {
     if (req.file === undefined) return res.status(400).json({ message: 'Bad request' });
     if (err) return validateImageUploaded(req, res, err);
     const resImage = {};
-    resImage[`${req.file.fieldname}`] = `${""}/${req.file.key}`;
+    resImage[`${req.file.fieldname}`] = `${req.file.key}`;
     return res.status(200).json(resImage);
   });
 };
@@ -78,7 +78,7 @@ const multiUploadHandler = (req, res, fieldName, maxCount) => {
     return res.status(200).json(
       req.files.map((photo) => {
         const resImage = {};
-        resImage[`${photo.fieldname}`] = `${""}/${photo.key}`;
+        resImage[`${photo.fieldname}`] = `${photo.key}`;
         return resImage;
       }),
     );

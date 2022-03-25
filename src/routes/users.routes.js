@@ -8,6 +8,7 @@ router.get('/refresh-token', userController.refreshToken);
 router.get('/:userId', userController.getUserById);
 router.get('/', userController.getUsers);
 router.post('/login', userController.login);
+router.post('/loginFacebook', userController.loginFacebook);
 router.post('/recover-password', userController.recoverPassword);
 router.post('/request-deactivation/:userId', userController.reqDeactivateUser);
 router.post('/:userId/account-status', userController.postUserAccount);
